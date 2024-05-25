@@ -97,22 +97,52 @@ class Admin(User):
 # ━━━━━━━━━━━━━━━━━━━━━━━━ LOGIN PAGE STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 
 def login():
-    username = input("Masukkan Username > ")
-    password = enkripsi_password(prompt="Masukkan Password > ", mask="•")
-    try:
-        kueri = db.query(f"SELECT username, password, role FROM akun WHERE username = '{username}' AND password = '{password}'")
-        if not kueri:
-            print("Username atau password yang dimasukkan salah.")
+    maks = 3
+    percobaan = 0
+    while percobaan < maks:
+        pilihan = input("Pilih metode login (1. Username, 2. No Telepon): ")
+        
+        if pilihan == "1":
+            tipe_kredensial = "Username"
+        elif pilihan == "2":
+            tipe_kredensial = "No Telp"
         else:
-            role = kueri[0][2]  
-            if role == "Donatur":
-                menuDonatur()
-            elif role == "Admin":
-                menuAdmin()
+            print("Pilihan tidak valid. Silakan pilih 1 atau 2.")
+            continue
+        
+        
+        
+        credential = input(f"Masukkan {tipe_kredensial} > ")
+        password = enkripsi_password(prompt="Masukkan Password > ", mask="•")
+
+        if tipe_kredensial == "No Telp":
+            tipe_kredensial = "notelp"
+        
+        try:
+            kueri = db.query(f"SELECT username, password, role, notelp FROM akun WHERE {tipe_kredensial} = '{credential}' AND password = '{password}'")
+            if not kueri:
+                print("Username atau password yang dimasukkan salah.")
+                percobaan += 1
             else:
-                print("Role tidak valid.")
-    except Exception as e:
-        print(f"Terjadi kesalahan saat melakukan login: {e}")
+                role = kueri[0][2]
+                if role == "Donatur":
+                    donatur = Donatur(kueri[0][0], password, kueri[0][3])
+                    menuDonatur(donatur)
+                elif role == "Admin":
+                    admin = Admin(kueri[0][0], password)
+                    menuAdmin(admin)
+                else:
+                    print("Role tidak valid.")
+                break
+        except Exception as e:
+            print(f"Terjadi kesalahan saat melakukan login: {e}")
+
+    if percobaan == maks:
+        print("Anda telah melebihi batas percobaan login. Silakan coba lagi nanti.")
+
+
+
+
   
 
 def register():
@@ -124,11 +154,12 @@ def register():
         cek_username = db.query(f"SELECT * FROM akun WHERE username = '{username}'")
         cek_notelp = db.query(f"SELECT * FROM akun WHERE notelp = '{notelp}'")
         if cek_username:
-            print("Username  sudah digunakan. Silakan coba dengan data yang berbeda.")
+            print("Username sudah digunakan. Silakan coba dengan data yang berbeda.")
         elif cek_notelp:
-            print("Nomor telepon  sudah digunakan. Silakan coba dengan data yang berbeda.")
+            print("Nomor telepon sudah digunakan. Silakan coba dengan data yang berbeda.")
         else:
-            db.query(f"INSERT INTO akun(username, password, notelp, role) VALUES ('{username}', '{password}', '{notelp}', 'Donatur')")
+            donatur = Donatur(username, password, notelp)
+            db.query(f"INSERT INTO akun(username, password, notelp, role) VALUES ('{donatur.get_username()}', '{donatur.get_password()}', '{donatur.get_notelp()}', 'Donatur')")
             print("Berhasil Daftar...")
     except Exception as e:
         print(f"Terjadi kesalahan saat melakukan register: {e}")
@@ -241,8 +272,8 @@ def forgot_no_telepon():
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ USER STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
-def menuDonatur():
-    print("Selamat datang Donatur")
+def menuDonatur(donatur):
+    print(f"Selamat datang Donatur {donatur.get_username()}")
     print("1. Tentang Kami")
     print("2. Program Kami")
     print("3. Donasi")    
@@ -262,8 +293,8 @@ def UserProgramKami():
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ ADMIN STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 
-def menuAdmin():
-    print("Selamat datang Admin")
+def menuAdmin(admin):
+    print(f"Selamat datang Admin {admin.get_username()}")
     print("1. Manajemen Program Donasi")
     print("2. Manajemen Adik Asuh")
     print("3. Logout")
@@ -279,5 +310,4 @@ def AdminManajemen_AdikAsuh():
 
 
 
-register()
-
+login()
