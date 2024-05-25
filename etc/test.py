@@ -190,6 +190,7 @@ def forgot_password():
                     print(f"Username: {username}")
                     print(f"Password: {password}")
                     print(f"No Telepon: {notelp}")
+
                     return False
                 else:
                     print("Username tidak ditemukan.")
