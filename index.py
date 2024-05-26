@@ -5,8 +5,10 @@
 # Modul Koneksi Database 
 import mysql.connector
 from mysql.connector import Error
-# s
+# Modul Password Char
 from pwinput import pwinput as enkripsi_password
+# Modul Fitur Tambahan
+from etc.fitur_tambahan import validasi_email, kirim_forgot_account  
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -82,17 +84,27 @@ class User():
 
 
 class Donatur(User):
-    def __init__(self, username, password, notelp):
+    def __init__(self, nama, username, password, notelp, email):
         super().__init__(username, password)
         self.__notelp = notelp
+        self.__nama = nama
+        self.__email = email
 
     def get_notelp(self):
         return self.__notelp
+    def get_nama(self):
+        return self.__nama
+    def get_email(self):
+        return self.__email
 
 
 class Admin(User):
-    def __init__(self, username, password):
+    def __init__(self, nama, username, password):
         super().__init__(username, password)
+        self.__nama = nama
+    
+    def get_nama(self):
+        return self.__nama
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ LOGIN PAGE STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 
@@ -117,19 +129,21 @@ def login():
 
         if tipe_kredensial == "No Telp":
             tipe_kredensial = "notelp"
+        elif tipe_kredensial == "Username":
+            tipe_kredensial = "username"
         
         try:
-            kueri = db.query(f"SELECT username, password, role, notelp FROM akun WHERE {tipe_kredensial} = '{credential}' AND password = '{password}'")
+            kueri = db.query(f"SELECT nama, username, password, role, notelp, email FROM akun WHERE {tipe_kredensial} = '{credential}' AND password = '{password}'")
             if not kueri:
                 print("Username atau password yang dimasukkan salah.")
                 percobaan += 1
             else:
-                role = kueri[0][2]
+                role = kueri[0][3]
                 if role == "Donatur":
-                    donatur = Donatur(kueri[0][0], password, kueri[0][3])
+                    donatur = Donatur(kueri[0][0], kueri[0][1], password, kueri[0][4], kueri[0][5] )
                     menuDonatur(donatur)
                 elif role == "Admin":
-                    admin = Admin(kueri[0][0], password)
+                    admin = Admin(kueri[0][0], kueri[0][1], password)
                     menuAdmin(admin)
                 else:
                     print("Role tidak valid.")
@@ -140,26 +154,36 @@ def login():
     if percobaan == maks:
         print("Anda telah melebihi batas percobaan login. Silakan coba lagi nanti.")
 
-
-
-
   
 
 def register():
+    nama = input("Masukkan Nama Lengkap > ")
     username = input("Masukkan Username > ")
     password = enkripsi_password(prompt="Masukkan Password > ", mask="•")
     notelp = input("Masukkan No Telepon > ")
+    percobaan_email = True
+    while percobaan_email:
+        email = input("Masukkan Email > ")
+        if validasi_email(email):
+            print("Email valid")
+            percobaan_email = False
+        else:
+            print("Email tidak valid")
+            
 
     try:
         cek_username = db.query(f"SELECT * FROM akun WHERE username = '{username}'")
         cek_notelp = db.query(f"SELECT * FROM akun WHERE notelp = '{notelp}'")
+        cek_email = db.query(f"SELECT * FROM akun WHERE notelp = '{email}'")
         if cek_username:
             print("Username sudah digunakan. Silakan coba dengan data yang berbeda.")
         elif cek_notelp:
             print("Nomor telepon sudah digunakan. Silakan coba dengan data yang berbeda.")
+        elif cek_email:
+            print("Email sudah digunakan. Silakan coba dengan data yang berbeda.")
         else:
-            donatur = Donatur(username, password, notelp)
-            db.query(f"INSERT INTO akun(username, password, notelp, role) VALUES ('{donatur.get_username()}', '{donatur.get_password()}', '{donatur.get_notelp()}', 'Donatur')")
+            donatur = Donatur(nama, username, password, notelp, email)
+            db.query(f"INSERT INTO akun(nama, username, password, notelp, role, email) VALUES ('{donatur.get_nama()}','{donatur.get_username()}', '{donatur.get_password()}', '{donatur.get_notelp()}', 'Donatur', '{donatur.get_email()}')")
             print("Berhasil Daftar...")
     except Exception as e:
         print(f"Terjadi kesalahan saat melakukan register: {e}")
@@ -187,23 +211,23 @@ def forgot_account():
 
 def forgot_username():
     while True:
-        username = input("Masukkan Username > ")
+        notelp = input("Masukkan No Telepon > ")
         try:
-            cari_username = db.query(f"SELECT id_akun, username, password, notelp FROM akun WHERE username = '{username}'")
+            cari_username = db.query(f"SELECT nama, username, password, notelp, email FROM akun WHERE notelp = '{notelp}'")
             if cari_username:
-                id_akun, username, password, notelp = cari_username[0]
-                print("Informasi akun kamu adalah:")
-                print(f"ID Akun: {id_akun}")
-                print(f"Username: {username}")
-                print(f"Password: {password}")
-                print(f"No Telepon: {notelp}")
-                return False
+                nama, username, password, notelp, email = cari_username[0]
+                if validasi_email(email):
+                    kirim_forgot_account(nama, username, password, notelp, email)
+                    print("Informasi akun telah dikirim ke email Anda.")
+                    return False
+                else:
+                    print("Email tidak valid.")
             else:
-                print("Username tidak ditemukan.")
+                print("Nomor telepon tidak ditemukan.")
         except Exception as e:
             print(f"Terjadi kesalahan saat melakukan pencarian username: {e}")
-        
 
+        
 def forgot_password():
     print("Metode Forgot Password : ")
     print("1. by Username")
@@ -213,59 +237,58 @@ def forgot_password():
         while True:
             username = input("Masukkan Username > ")
             try:
-                cari_username = db.query(f"SELECT id_akun, username, password, notelp FROM akun WHERE username = '{username}'")
+                cari_username = db.query(f"SELECT nama, username, password, notelp, email FROM akun WHERE username = '{username}'")
                 if cari_username:
-                    id_akun, username, password, notelp = cari_username[0]
-                    print("Informasi akun kamu adalah:")
-                    print(f"ID Akun: {id_akun}")
-                    print(f"Username: {username}")
-                    print(f"Password: {password}")
-                    print(f"No Telepon: {notelp}")
-                    return False
+                    nama, username, password, notelp, email = cari_username[0]
+                    if validasi_email(email):
+                        kirim_forgot_account(nama, username, password, notelp, email)
+                        print("Informasi akun telah dikirim ke email Anda.")
+                        return False
+                    else:
+                        print("Email tidak valid.")
                 else:
                     print("Username tidak ditemukan.")
             except Exception as e:
                 print(f"Terjadi kesalahan saat mencari password berdasarkan username: {e}")
-            
+
     elif pilih_metode == 2:
         while True:
             notelp = input("Masukkan No Telepon > ")
             try:
-                cari_notelp = db.query(f"SELECT id_akun, username, password, notelp FROM akun WHERE notelp = '{notelp}'")
+                cari_notelp = db.query(f"SELECT nama, username, password, notelp, email FROM akun WHERE notelp = '{notelp}'")
                 if cari_notelp:
-                    id_akun, username, password, notelp = cari_notelp[0]
-                    print("Informasi akun kamu adalah:")
-                    print(f"ID Akun: {id_akun}")
-                    print(f"Username: {username}")
-                    print(f"Password: {password}")
-                    print(f"No Telepon: {notelp}")
-
-                    return False
+                    nama, username, password, notelp, email = cari_notelp[0]
+                    if validasi_email(email):
+                        kirim_forgot_account(nama, username, password, notelp, email)
+                        print("Informasi akun telah dikirim ke email Anda.")
+                        return False
+                    else:
+                        print("Email tidak valid.")
                 else:
                     print("No Telepon tidak ditemukan.")
             except Exception as e:
                 print(f"Terjadi kesalahan saat mencari password berdasarkan no telepon: {e}")
-            
+
     else:
         print("Pilihan tidak valid.")
 
 def forgot_no_telepon():
     while True:
-        notelp = input("Masukkan No Telepon > ")
+        username = input("Masukkan Username > ")
         try:
-            cari_notelp = db.query(f"SELECT id_akun, username, password, notelp FROM akun WHERE notelp = '{notelp}'")
+            cari_notelp = db.query(f"SELECT nama, username, password, notelp, email FROM akun WHERE username = '{username}'")
             if cari_notelp:
-                id_akun, username, password, notelp = cari_notelp[0]
-                print("Informasi akun kamu adalah:")
-                print(f"ID Akun: {id_akun}")
-                print(f"Username: {username}")
-                print(f"Password: {password}")
-                print(f"No Telepon: {notelp}")
-                return False
+                nama, username, password, notelp, email = cari_notelp[0]
+                if validasi_email(email):
+                    kirim_forgot_account(nama, username, password, notelp, email)
+                    print("Informasi akun telah dikirim ke email Anda.")
+                    return False
+                else:
+                    print("Email tidak valid.")
             else:
-                print("No Telepon tidak ditemukan.")
+                print("Username tidak ditemukan.")
         except Exception as e:
-            print(f"Terjadi kesalahan saat mencari password berdasarkan no telepon: {e}")
+            print(f"Terjadi kesalahan saat mencari nomor telepon berdasarkan username: {e}")
        
 
     
@@ -273,7 +296,7 @@ def forgot_no_telepon():
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ USER STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 def menuDonatur(donatur):
-    print(f"Selamat datang Donatur {donatur.get_username()}")
+    print(f"Selamat datang Donatur {donatur.get_nama()}")
     print("1. Tentang Kami")
     print("2. Program Kami")
     print("3. Donasi")    
@@ -294,7 +317,7 @@ def UserProgramKami():
 # ━━━━━━━━━━━━━━━━━━━━━━━━ ADMIN STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 
 def menuAdmin(admin):
-    print(f"Selamat datang Admin {admin.get_username()}")
+    print(f"Selamat datang Admin {admin.get_nama()}")
     print("1. Manajemen Program Donasi")
     print("2. Manajemen Adik Asuh")
     print("3. Logout")
@@ -310,4 +333,4 @@ def AdminManajemen_AdikAsuh():
 
 
 
-login()
+forgot_account()
