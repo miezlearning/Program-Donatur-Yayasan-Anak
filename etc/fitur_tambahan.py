@@ -67,6 +67,7 @@ def kirim_forgot_account(nama, username, password, notelp, tujuan):
         server.login(sender_email, app_password)
         server.send_message(msg)
         print('Berhasil, mengirim email...')
+        
 
 def garis():
     print("="*65)
