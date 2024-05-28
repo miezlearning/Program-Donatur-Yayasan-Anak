@@ -1,35 +1,57 @@
-import curses
+import os
+import readchar
 
-def main(stdscr):
-    stdscr.clear()
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
-    # Daftar opsi menu
-    options = ["Opsi 1", "Opsi 2", "Opsi 3", "Keluar"]
+def print_menu(menu, selected_index):
+    clear_screen()
+    print("Selamat datang")
+    for i, item in enumerate(menu):
+        if i == selected_index:
+            print(f"> {item}")
+        else:
+            print(f"  {item}")
 
-    current_row = 0
+def menu_login():
+    menu = ["Login", "Register", "Forgot Account", "Exit"]
+    selected_index = 0
+
+    print_menu(menu, selected_index)
 
     while True:
-        stdscr.clear()
-
-        for i, option in enumerate(options):
-            if i == current_row:
-                stdscr.addstr(i, 0, "> " + option, curses.A_REVERSE)
-            else:
-                stdscr.addstr(i, 0, "  " + option)
-
-        key = stdscr.getch()
-
-        if key == curses.KEY_UP and current_row > 0:
-            current_row -= 1
-        elif key == curses.KEY_DOWN and current_row < len(options) - 1:
-            current_row += 1
-        elif key == curses.KEY_ENTER or key in [10, 13]:
-            if current_row == len(options) - 1:  # Keluar dari program
+        key = readchar.readkey()
+        if key == readchar.key.UP:
+            selected_index = (selected_index - 1) % len(menu)
+            print_menu(menu, selected_index)
+        elif key == readchar.key.DOWN:
+            selected_index = (selected_index + 1) % len(menu)
+            print_menu(menu, selected_index)
+        elif key == readchar.key.ENTER:
+            if selected_index == 0:
+                login()
+            elif selected_index == 1:
+                register()
+            elif selected_index == 2:
+                forgot_account()
+            elif selected_index == 3:
                 break
-            else:
-                stdscr.clear()
-                stdscr.addstr(f"Anda memilih {options[current_row]}")
-                stdscr.getch()  # Menunggu pengguna menekan tombol
+            print_menu(menu, selected_index)
 
-# Menjalankan program
-curses.wrapper(main)
+def login():
+    clear_screen()
+    print("Login function called")
+    input("Press Enter to return to menu...")
+
+def register():
+    clear_screen()
+    print("Register function called")
+    input("Press Enter to return to menu...")
+
+def forgot_account():
+    clear_screen()
+    print("Forgot Account function called")
+    input("Press Enter to return to menu...")
+
+if __name__ == "__main__":
+    menu_login()

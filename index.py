@@ -8,7 +8,9 @@ from mysql.connector import Error
 # Modul Password Char
 from pwinput import pwinput as enkripsi_password
 # Modul Fitur Tambahan
-from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih , lanjut
+from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih , lanjut, org_chart, print_menu, menu_navigasi
+# Modul Keymenu
+
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -28,7 +30,7 @@ class Database:
                 database="pbotest"
             )
             if mydb.is_connected():
-                print("Berhasil Koneksi ke Database")
+                # print("Berhasil Koneksi ke Database")
                 return mydb
             else:
                 print("Koneksi Gagal")
@@ -96,6 +98,9 @@ class Donatur(User):
         return self.__nama
     def get_email(self):
         return self.__email
+    
+    def set_email(self):
+        self.__email = self.email
 
 
 class Admin(User):
@@ -110,43 +115,33 @@ class Admin(User):
 
 
 def menuLogin():
+    menu = ["Login", "Register", "Forgot Account", "Exit"]
     while True:
-        print("Selamat datang")
-        print("1. Login")
-        print("2. Register")
-        print("3. Forgot Account")
-
-        pilih = input("Pilih Menu > ")
-
-        if not pilih:
-            print("Inputan tidak boleh kosong.")
-            continue
-        if not pilih.isdigit():
-            print("Inputan harus angka.")
-            continue
-
-        if pilih == "1":
+        header = "Selamat datang!"
+        selected_index = menu_navigasi(header, menu)
+        if selected_index == 0:
             login()
-        elif pilih == "2":
+        elif selected_index == 1:
             register()
-        elif pilih == "3":
+        elif selected_index == 2:
             forgot_account()
-        else:
-            print("Pilihan tidak valid.")
+        elif selected_index == 3:
+            break
 
 def login():
     maks = 3
     percobaan = 0
     while percobaan < maks:
-        pilihan = input("Pilih metode login (1. Username, 2. No Telepon): ")
+        options = ["1", "2"]
+        menu_items = ["• Username", "• No Telepon"]
+        header = "Pilih Metode Login :"
+        selected_index = menu_navigasi(header, menu_items)
+        pilihan = options[selected_index]
         
         if pilihan == "1":
             tipe_kredensial = "Username"
         elif pilihan == "2":
             tipe_kredensial = "No Telp"
-        else:
-            print("Pilihan tidak valid. Silakan pilih 1 atau 2.")
-            continue
         
         credential = input(f"Masukkan {tipe_kredensial} > ")
         if not credential:
@@ -165,12 +160,13 @@ def login():
         try:
             kueri = db.query(f"SELECT nama, username, password, role, notelp, email FROM akun WHERE {tipe_kredensial} = '{credential}' AND password = '{password}'")
             if not kueri:
-                print("Username atau password yang dimasukkan salah.")
+                print(f"{tipe_kredensial} atau password yang dimasukkan salah.")
+                lanjut()
                 percobaan += 1
             else:
                 role = kueri[0][3]
                 if role == "Donatur":
-                    donatur = Donatur(kueri[0][0], kueri[0][1], password, kueri[0][4], kueri[0][5] )
+                    donatur = Donatur(kueri[0][0], kueri[0][1], password, kueri[0][4], kueri[0][5])
                     menuDonatur(donatur)
                 elif role == "Admin":
                     admin = Admin(kueri[0][0], kueri[0][1], password)
@@ -183,6 +179,7 @@ def login():
 
     if percobaan == maks:
         print("Anda telah melebihi batas percobaan login. Silakan coba lagi nanti.")
+
 
   
 def register():
@@ -260,8 +257,6 @@ def forgot_account():
             print("Inputan harus angka.")
             continue
         
-    
-            
         if pilih == "1":
             forgot_username()
         elif pilih == "2":
@@ -375,65 +370,143 @@ def forgot_no_telepon():
         except Exception as e:
             print(f"Terjadi kesalahan saat mencari nomor telepon berdasarkan username: {e}")
        
-
+# BAGIAN LOGIN-FORGOT ACCOUNT UDAH SELESAI JANGAN DI UBAH UBAH DULU!
 
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ USER STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 def menuDonatur(donatur):
-    print(f"Selamat datang Donatur {donatur.get_nama()}")
-    print("1. Tentang Kami")
-    print("2. Program Kami")
-    print("3. Donasi")    
-    print("4. Donasi Mingguan")    
-    print("5. Adik Asuh") 
-    print("6. Pengaturan Akun")
-    print("0. Logout")
+    while True:
+        print(f"Selamat datang Donatur {donatur.get_nama()}")
+        print("1. Tentang Kami")
+        print("2. Program Kami")
+        print("3. Donasi")    
+        print("4. Donasi Mingguan")    
+        print("5. Adik Asuh") 
+        print("6. Pengaturan Akun")
+        print("0. Logout")
 
-    pilihan = int(input("Pilih Menu >"))
+        pilihan = input("Pilih Menu >")
+        if not pilihan:
+            print("Inputan tidak boleh kosong.")
+            continue
+        if not pilihan.isdigit():
+            print("Inputan harus angka.")
+            continue
 
-    if pilihan == 1 :
-        UserTentangKami()
-    elif pilihan == 2 :
-        pass
-    elif pilihan == 3 :
-        pass
-    elif pilihan == 4 :
-        pass
-    elif pilihan == 5 :
-        pass
-    elif pilihan == 6 :
-        pass
-    elif pilihan == 0 :
-        pass
-    else:
-        pass
+        if pilihan == 1 :
+            TentangKami()
+        elif pilihan == 2 :
+            pass
+        elif pilihan == 3 :
+            pass
+        elif pilihan == 4 :
+            pass
+        elif pilihan == 5 :
+            pass
+        elif pilihan == 6 :
+            pass
+        elif pilihan == 0 :
+            pass
+        else:
+            pass
 
 
 
 
-def UserTentangKami():
-    print("Tentang Kami")
-    print("1. Profil")
-    print("2. Visi & Misi")
-    print("3. Tujuan")
-    print("4. Struktur Pengurus")
-    print("5. Laporan Keuangan")
-    print("0. Kembali")
-    pilihan = int(input("Pilih Menu >"))
+def TentangKami():
+    while True:
+        pembersih()
+        print("Tentang Kami")
+        print("1. Profil")
+        print("2. Visi & Misi")
+        print("3. Tujuan")
+        print("4. Struktur Pengurus")
+        print("5. Laporan Keuangan")
+        print("0. Kembali")
+        pilihan = input("Pilih Menu >")
+        if not pilihan:
+            print("Inputan tidak boleh kosong.")
+            continue
+        if not pilihan.isdigit():
+            print("Inputan harus angka.")
+            continue
 
-    if pilihan == 1:
-        pass
-    elif pilihan == 2:
-        pass
-    elif pilihan == 3:
-        pass
-    elif pilihan == 4:
-        pass
-    elif pilihan == 5:
-        pass
-    elif pilihan == 0:
-        return
+        if pilihan == "1":
+            profil()
+        elif pilihan == "2":
+            visi_misi()
+        elif pilihan == "3":
+            tujuan()
+        elif pilihan == "4":
+            struktur_pengurus()
+        elif pilihan == "5":
+            pass #Nanti aja setelah donasi dan program kami selesai
+        elif pilihan == "0":
+            return
+        else:
+            print("Pilihan tidak valid.")
+            lanjut()
+
+
+def profil():
+    print('''
+Selamat datang di aplikasi Yayasan Anak Budi Pekerti! Yayasan kami didirikan untuk memberikan dukungan dan pendidikan bagi anak-anak yang kurang beruntung, menciptakan lingkungan yang penuh kasih dan mendukung perkembangan optimal mereka.
+
+Aplikasi ini memiliki berbagai fitur untuk memudahkan Anda, seperti halaman login yang lengkap dengan opsi register, pemulihan akun, pemulihan kata sandi, nama pengguna, dan nomor telepon yang terlupakan.
+
+Menu utama untuk pengguna mencakup informasi tentang kami, profil yayasan, visi, misi, tujuan, struktur pengurus, dan laporan keuangan. Selain itu, Anda dapat menjelajahi program kami, melakukan donasi, mengikuti donasi mingguan, dan mendukung program adik asuh.
+
+Bagi admin, tersedia fitur manajemen program donasi yang mencakup tambah, edit, hapus, lihat, dan konfirmasi program donasi. Juga ada manajemen adik asuh yang memungkinkan admin untuk menambah, mengedit, menghapus, dan melihat data anak.
+
+Fitur tambahan dalam aplikasi ini termasuk koneksi database, karakter kata sandi, pembersihan layar terminal, dan email untuk pemulihan akun yang terlupakan.
+
+Dengan aplikasi ini, kami berharap dapat memudahkan Anda untuk berpartisipasi dalam mendukung anak-anak yang membutuhkan, melalui berbagai program yang kami tawarkan.
+''')
+    lanjut()
+    TentangKami()
+    return
+
+
+def visi_misi():
+    print('''
+> Visi
+
+Menjadi yayasan terdepan yang menyediakan pendidikan dan dukungan komprehensif bagi anak-anak yang kurang beruntung, sehingga mereka dapat tumbuh menjadi individu yang berintegritas, berpengetahuan, dan mandiri.
+
+> Misi
+
+1. Menyediakan akses pendidikan berkualitas yang terjangkau bagi anak-anak yang kurang beruntung.
+2. Menciptakan lingkungan yang aman, sehat, dan mendukung untuk perkembangan fisik dan mental anak-anak.
+3. Mengembangkan program-program yang berfokus pada peningkatan keterampilan hidup, kepercayaan diri, dan kreativitas anak-anak.
+4. Menjalin kerjasama dengan berbagai pihak untuk memperluas jangkauan dan efektivitas program-program yayasan.
+5. Menyediakan layanan kesehatan dan kesejahteraan yang komprehensif untuk mendukung pertumbuhan optimal anak-anak.
+          ''')
+    lanjut()
+    TentangKami()
+    return
+    
+def tujuan():
+    print('''
+> Tujuan          
+
+1. Meningkatkan kualitas pendidikan dan prestasi akademis anak-anak melalui program pendidikan yang inovatif dan berkelanjutan.
+2. Membangun karakter dan integritas anak-anak melalui kegiatan budi pekerti dan nilai-nilai moral.
+3. Memastikan setiap anak memiliki akses ke fasilitas kesehatan dasar dan layanan pendukung psikologis.
+4. Memberdayakan anak-anak dengan keterampilan hidup yang dibutuhkan untuk menghadapi tantangan masa depan.
+5. Menggalang dukungan dan partisipasi masyarakat dalam upaya peningkatan kesejahteraan anak-anak yang kurang beruntung.
+''')
+    lanjut()
+    TentangKami()
+    return
+
+def struktur_pengurus():
+    org_chart()
+    lanjut()
+    TentangKami()
+
+def laporan_keuangan():
+    pass
 
 
 def UserProgramKami():
@@ -445,20 +518,66 @@ def UserProgramKami():
 # ━━━━━━━━━━━━━━━━━━━━━━━━ ADMIN STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 
 def menuAdmin(admin):
-    print(f"Selamat datang Admin {admin.get_nama()}")
-    print("1. Manajemen Program Donasi")
-    print("2. Manajemen Adik Asuh")
-    print("3. Logout")
+    while True:
+        print(f"Selamat datang Admin {admin.get_nama()}")
+        print("1. Manajemen Program Donasi")
+        print("2. Manajemen Adik Asuh")
+        print("0. Logout")
+        pilihan = input("Masukkan Pilihan")
+        if not pilihan:
+            print("Inputan tidak boleh kosong.")
+            continue
+        if not pilihan.isdigit():
+            print("Inputan harus angka.")
+            continue
+
+        if pilihan == "1":
+            AdminManajemen_ProgramDonasi()
+        elif pilihan == "2":
+            pass
+        elif pilihan == "0":
+            pass
+        else:
+            print("Pilihan tidak valid.")
 
 def AdminManajemen_ProgramDonasi():
+    while True:
+        print("Halaman Manajemen Program Yayasan")
+        print("1. Lihat Program Yayasan")
+        print("2. Tambah Program Yayasan")
+        print("3. Edit Program Yayasan")
+        print("4. Hapus Program Yayasan")
+        print("Untuk kembali ke menu sebelumnya \"kembali\" untuk menu utama \"menu\" ")
+        pilihan = input("Masukkan Pilihan > ")
+        if not pilihan:
+            print("Inputan tidak boleh kosong.")
+            continue
+
+        if pilihan == "1" :
+            pass
+        elif pilihan == "2":
+            pass
+        elif pilihan == "3":
+            pass
+        elif pilihan == 4:
+            pass
+        elif pilihan == 0:
+            pass
+
+
+def lihatProgram():
+    pass
+
+def tambahProgram():
+    pass
+
+def editProgram():
+    pass
+
+def hapusProgram():
     pass
 
 def AdminManajemen_AdikAsuh():
     pass
-
-
-
-
-
 
 menuLogin()

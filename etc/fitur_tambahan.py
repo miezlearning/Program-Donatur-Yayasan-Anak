@@ -5,6 +5,16 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 import os
+import readchar
+
+class warna:
+    ungu = "\033[95m"
+    hijau = "\033[92m"
+    kuning = "\033[93m"
+    bold = "\033[1m"
+    underline = "\033[4m" 
+    merah = "\033[91m"
+    reset = "\033[0m"
 
 
 def validasi_email(email):
@@ -65,7 +75,6 @@ def lanjut():
     print("\n")
     garis()
     print("Press ENTER untuk melanjutkan...")
-    print("NOTE : Form pengisian akan direset!")
     garis()
     input()
 
@@ -78,3 +87,48 @@ def pembersih():
         os.system('cls')
     else:
         os.system('clear')
+
+
+def org_chart():
+    print('''
+                            _______________________________________________________
+                            |                        Budi Pekerti                  |
+                            |                       Yayasan Sosial                 |
+                            |______________________________________________________|
+                                        |
+                                        |-- Dewan Pembina
+                                        |       |-- Ketua Dewan Pembina
+                                        |       |-- Anggota Dewan Pembina
+                                        |
+                                        |-- Dewan Pengawas
+                                        |       |-- Ketua Dewan Pengawas
+                                        |       |-- Anggota Dewan Pengawas
+                                        |
+                                        |-- Dewan Pengurus
+                                                |-- Ketua Yayasan
+                                                |-- Wakil Ketua Yayasan
+                                                |-- Sekretaris
+                                                |-- Bendahara
+                            _______________________________________________________
+    ''')
+
+def print_menu(header, menu, selected_index):
+    print(header)
+    for i, item in enumerate(menu):
+        if i == selected_index:
+            print(f"> {item}")
+        else:
+            print(f"  {item}")
+
+def menu_navigasi(header, options):
+    selected_index = 0
+    while True:
+        pembersih()
+        print_menu(header,options, selected_index)
+        key = readchar.readkey()
+        if key == readchar.key.UP:
+            selected_index = (selected_index - 1) % len(options)
+        elif key == readchar.key.DOWN:
+            selected_index = (selected_index + 1) % len(options)
+        elif key == readchar.key.ENTER:
+            return selected_index
