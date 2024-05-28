@@ -40,7 +40,7 @@ def kirim_forgot_account(nama, username, password, notelp, tujuan):
     <html>
     <body>
         <img src="cid:banner_lupa_akun" style="width: 507px; height: 127px; aspect-ratio: auto 507 / 127;">
-        <p>Halo, {nama},</p>
+        <p>Halo, <b>{nama}</b>,</p>
         <p>Berikut adalah informasi akun Anda:</p>
         <ul>
             <li>Username: {username}</li>
@@ -67,7 +67,7 @@ def kirim_forgot_account(nama, username, password, notelp, tujuan):
         server.login(sender_email, app_password)
         server.send_message(msg)
         print('Berhasil, mengirim email...')
-        
+
 
 def garis():
     print("="*65)

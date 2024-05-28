@@ -93,7 +93,7 @@ class Donatur(User):
         self.__notelp = notelp
         self.__nama = nama
         self.__email = email
-        self.is_logged_in = True
+        self.cek_login = True
         
     def get_notelp(self):
         return self.__notelp
@@ -106,7 +106,7 @@ class Donatur(User):
         self.__email = self.__email
 
     def logout(self):
-        self.is_logged_in = False
+        self.cek_login = False
 
 
 
@@ -114,20 +114,20 @@ class Admin(User):
     def __init__(self, nama, username, password):
         super().__init__(username, password)
         self.__nama = nama
-        self.is_logged_in = True
+        self.cek_login = True
     
     def get_nama(self):
         return self.__nama
     
     def logout(self):
-        self.is_logged_in = False
+        self.cek_login = False
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ LOGIN PAGE STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 
 
 def menuLogin():
-    menu = ["Login", "Register", "Forgot Account", "Exit"]
+    menu = ["• Login", "• Register", "• Forgot Account", "• Exit"]
     while True:
         header = "Selamat datang!"
         selected_index = menu_navigasi(header, menu)
@@ -325,7 +325,7 @@ def forgot_password():
         # print("1. by Username")
         # print("2. by No Telepon")
         # print("0. Kembali")
-        menu = ['Dengan Usernamae', 'Dengan No Telepon','Kembali']
+        menu = ['Dengan Username', 'Dengan No Telepon','Kembali']
         header = "Pilih Metode Forgot Password :"
         pilih_metode = menu_navigasi(header, menu)
         if pilih_metode == 0:
@@ -417,37 +417,40 @@ def forgot_no_telepon():
 # ━━━━━━━━━━━━━━━━━━━━━━━━ USER STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 def menuDonatur(donatur):
     
-    while donatur.is_logged_in:
-        print(f"Selamat datang Donatur {donatur.get_nama()}")
-        print("1. Tentang Kami")
-        print("2. Program Kami")
-        print("3. Donasi")    
-        print("4. Donasi Mingguan")    
-        print("5. Adik Asuh") 
-        print("6. Pengaturan Akun")
-        print("0. Logout")
+    while donatur.cek_login:
+        header = f"Selamat datang Donatur {donatur.get_nama()}"
+        # print("1. Tentang Kami")
+        # print("2. Program Kami")
+        # print("3. Donasi")    
+        # print("4. Donasi Mingguan")    
+        # print("5. Adik Asuh") 
+        # print("6. Pengaturan Akun")
+        # print("0. Logout")'
+        #             0                1            2           3               4              5               6
+        menu = ['Tentang Kami', 'Program Kami', 'Donasi', 'Donasi Mingguan', 'Adik Asuh', 'Pengaturan Akun','Logout']
+        pilihan = menu_navigasi(header, menu)
 
-        pilihan = input("Pilih Menu > ")
-        if not pilihan:
-            print("Inputan tidak boleh kosong.")
-            continue
-        if not pilihan.isdigit():
-            print("Inputan harus angka.")
-            continue
+        # pilihan = input("Pilih Menu > ")
+        # if not pilihan:
+        #     print("Inputan tidak boleh kosong.")
+        #     continue
+        # if not pilihan.isdigit():
+        #     print("Inputan harus angka.")
+        #     continue
 
-        if pilihan == "1" :
+        if pilihan == 0 :
             TentangKami()
-        elif pilihan == "2" :
+        elif pilihan == 1 :
             pass
-        elif pilihan == "3" :
+        elif pilihan == 2 :
             pass
-        elif pilihan == "4" :
+        elif pilihan == 3 :
             pass
-        elif pilihan == "5" :
+        elif pilihan == 4 :
             pass
-        elif pilihan == "6" :
+        elif pilihan == 5 :
             pass
-        elif pilihan == "0" :
+        elif pilihan == 6 :
             donatur.logout()
         else:
             pass
@@ -456,6 +459,7 @@ def menuDonatur(donatur):
 
 
 def TentangKami():
+
     while True:
         # pembersih()
         # print("Tentang Kami")
@@ -466,8 +470,8 @@ def TentangKami():
         # print("5. Laporan Keuangan")
         # print("0. Kembali")
         # pilihan = input("Pilih Menu >")
-                 #0             1          2              3                    4                                 5
-        menu = ['Profil', 'Visi & Misi', 'Tujuan', 'Struktur Pengurus', 'Laporan Keuangan ( Coming Soon )', 'Kembali']
+                    #0             1              2              3                                    4                     5
+        menu = ['• Profil', '• Visi & Misi', '• Tujuan', '• Struktur Pengurus', '• Laporan Keuangan ( Coming Soon )', '• Kembali']
         header = "Tentang Kami :"
         pilihan  = menu_navigasi(header, menu)
         
@@ -557,51 +561,57 @@ def UserProgramKami():
 # ━━━━━━━━━━━━━━━━━━━━━━━━ ADMIN STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 
 def menuAdmin(admin):
-    while admin.is_logged_in:
-        print(f"Selamat datang Admin {admin.get_nama()}")
-        print("1. Manajemen Program Donasi")
-        print("2. Manajemen Adik Asuh")
-        print("0. Logout")
-        pilihan = input("Masukkan Pilihan")
-        if not pilihan:
-            print("Inputan tidak boleh kosong.")
-            continue
-        if not pilihan.isdigit():
-            print("Inputan harus angka.")
-            continue
+    while admin.cek_login:
+        # print(f"Selamat datang Admin {admin.get_nama()}")
+        # print("1. Manajemen Program Donasi")
+        # print("2. Manajemen Adik Asuh")
+        # print("0. Logout")
+        # pilihan = input("Masukkan Pilihan")
+        header = f"Selamat datang Admin {admin.get_nama()}"
+        menu = ['Manajemen Program Donasi', 'Manajemen Adik Asuh', 'Logout']
+        pilihan = menu_navigasi(header, menu)
+        # if not pilihan:
+        #     print("Inputan tidak boleh kosong.")
+        #     continue
+        # if not pilihan.isdigit():
+        #     print("Inputan harus angka.")
+        #     continue
 
-        if pilihan == "1":
+        if pilihan == 0:
             AdminManajemen_ProgramDonasi()
-        elif pilihan == "2":
+        elif pilihan == 1:
             pass
-        elif pilihan == "0":
+        elif pilihan == 2:
             admin.logout()
         else:
             print("Pilihan tidak valid.")
 
 def AdminManajemen_ProgramDonasi():
     while True:
-        print("Halaman Manajemen Program Yayasan")
-        print("1. Lihat Program Yayasan")
-        print("2. Tambah Program Yayasan")
-        print("3. Edit Program Yayasan")
-        print("4. Hapus Program Yayasan")
-        print("Untuk kembali ke menu sebelumnya \"kembali\" untuk menu utama \"menu\" ")
-        pilihan = input("Masukkan Pilihan > ")
-        if not pilihan:
-            print("Inputan tidak boleh kosong.")
-            continue
+        # print("Halaman Manajemen Program Yayasan")
+        # print("1. Lihat Program Yayasan")
+        # print("2. Tambah Program Yayasan")
+        # print("3. Edit Program Yayasan")
+        # print("4. Hapus Program Yayasan")
+        # print("Untuk kembali ke menu sebelumnya \"kembali\" untuk menu utama \"menu\" ")
+        header = "Halaman Manajemen Program Yayasan"
+        menu = ['Lihat Program Yayasan', 'Tambah Program Yayasan', 'Edit Program Yayasan', 'Hapus Program Yayasan', 'Kembali']
+        # pilihan = input("Masukkan Pilihan > ")
+        pilihan = menu_navigasi(header,menu)
+        # if not pilihan:
+        #     print("Inputan tidak boleh kosong.")
+        #     continue
 
-        if pilihan == "1" :
+        if pilihan == 0 :
             pass
-        elif pilihan == "2":
+        elif pilihan == 1:
             pass
-        elif pilihan == "3":
+        elif pilihan == 2:
+            pass
+        elif pilihan == 3:
             pass
         elif pilihan == 4:
-            pass
-        elif pilihan == 0:
-            pass
+            break
 
 
 def lihatProgram():
