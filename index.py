@@ -126,14 +126,14 @@ def menuLogin():
         elif selected_index == 2:
             forgot_account()
         elif selected_index == 3:
-            break
+            exit(0)
 
 def login():
     maks = 3
     percobaan = 0
     while percobaan < maks:
-        options = ["1", "2"]
-        menu_items = ["• Username", "• No Telepon"]
+        options = ["1", "2","3"]
+        menu_items = ["• Username", "• No Telepon", "• Kembali"]
         header = "Pilih Metode Login :"
         selected_index = menu_navigasi(header, menu_items)
         pilihan = options[selected_index]
@@ -142,6 +142,8 @@ def login():
             tipe_kredensial = "Username"
         elif pilihan == "2":
             tipe_kredensial = "No Telp"
+        elif pilihan == "3":
+            menuLogin()
         
         credential = input(f"Masukkan {tipe_kredensial} > ")
         if not credential:
@@ -243,30 +245,37 @@ def register():
     
 def forgot_account():
     while True:
-        print("Pilih Metode Forgot Account : ")
-        print("1. Forgot Username")
-        print("2. Forgot Password")
-        print("3. Forgot No Telepon")
-        print("0. Kembali")
-        
-        pilih = input("Masukkan Pilihan > ")
-        if not pilih:
-            print("Inputan tidak boleh kosong.")
-            continue
-        if not pilih.isdigit():
-            print("Inputan harus angka.")
-            continue
-        
-        if pilih == "1":
+        menu = ['Forgot Username', 'Forgot Password', 'Forgot No Telepon', 'Kembali']
+        header = "Pilih Metode Forgot Account :"
+        selected_index = menu_navigasi(header, menu)
+        if selected_index == 0:
             forgot_username()
-        elif pilih == "2":
+        elif selected_index == 1:
             forgot_password()
-        elif pilih == "3":
+        elif selected_index == 2:
             forgot_no_telepon()
-        elif pilih == "0":
-            login()
-        else: 
-            print("Pilihan tidak valid.")
+        elif selected_index == 3:
+            menuLogin()
+            return False
+        
+        # pilih = input("Masukkan Pilihan > ")
+        # if not pilih:
+        #     print("Inputan tidak boleh kosong.")
+        #     continue
+        # if not pilih.isdigit():
+        #     print("Inputan harus angka.")
+        #     continue
+        
+        # if pilih == "1":
+        #     forgot_username()
+        # elif pilih == "2":
+        #     forgot_password()
+        # elif pilih == "3":
+        #     forgot_no_telepon()
+        # elif pilih == "0":
+        #     login()
+        # else: 
+        #     print("Pilihan tidak valid.")
             
 
 def forgot_username():
@@ -293,18 +302,14 @@ def forgot_username():
         
 def forgot_password():
     while True:
-        print("Metode Forgot Password : ")
-        print("1. by Username")
-        print("2. by No Telepon")
-        print("0. Kembali")
-        pilih_metode = input("Masukkan Pilihan > ")
-        if not pilih_metode:
-                print("Inputan tidak boleh kosong.")
-                continue
-        if not pilih_metode.isdigit():
-            print("Inputan harus angka.")
-            continue
-        if pilih_metode == "1":
+        # print("Metode Forgot Password : ")
+        # print("1. by Username")
+        # print("2. by No Telepon")
+        # print("0. Kembali")
+        menu = ['Dengan Usernamae', 'Dengan No Telepon','Kembali']
+        header = "Pilih Metode Forgot Password :"
+        pilih_metode = menu_navigasi(header, menu)
+        if pilih_metode == 0:
             while True:
                 username = input("Masukkan Username > ")
                 if not username:
@@ -325,7 +330,7 @@ def forgot_password():
                 except Exception as e:
                     print(f"Terjadi kesalahan saat mencari password berdasarkan username: {e}")
 
-        elif pilih_metode == "2":
+        elif pilih_metode == 1:
             while True:
                 notelp = input("Masukkan No Telepon > ")
                 if not pilih_metode:
@@ -345,10 +350,26 @@ def forgot_password():
                         print("No Telepon tidak ditemukan.")
                 except Exception as e:
                     print(f"Terjadi kesalahan saat mencari password berdasarkan no telepon: {e}")
-        elif pilih_metode == "3":
+        elif pilih_metode == 2:
             forgot_account()
-        else:
-            print("Pilihan tidak valid.")
+            return False
+
+        
+        # pilih_metode = input("Masukkan Pilihan > ")
+        # if not pilih_metode:
+        #         print("Inputan tidak boleh kosong.")
+        #         continue
+        # if not pilih_metode.isdigit():
+        #     print("Inputan harus angka.")
+        #     continue
+        # if pilih_metode == "1":
+        #     pass
+        # elif pilih_metode == "2":
+        #     pass
+        # elif pilih_metode == "3":
+        #     pass
+        # else:
+        #     print("Pilihan tidak valid.")
 
 def forgot_no_telepon():
     while True:
