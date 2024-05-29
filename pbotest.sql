@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 26, 2024 at 09:21 PM
+-- Generation Time: May 29, 2024 at 07:49 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -53,7 +53,10 @@ INSERT INTO `akun` (`id_akun`, `nama`, `username`, `password`, `notelp`, `role`,
 (15, 'Moik', 'aaa', '123', '23912', 'Donatur', 'alip@gmail.com'),
 (16, 'Putri Nadilla Maharani', 'putri', 'hahahahaha', '0813101010110', 'Donatur', 'putrinadilla80@gmail.com'),
 (17, 'Apalah', 'rangga', 'rangga123', '081345028261', 'Donatur', 'rangga@gmail.com'),
-(18, 'Yusuf', 'ucup', '123', '081345020000', 'Donatur', 'ucup@gmail.com');
+(18, 'Yusuf', 'ucup', '123', '081345020000', 'Donatur', 'ucup@gmail.com'),
+(19, 'Junaidi', 'hakim', '123', '0123123', 'Donatur', 'hakim@gmail.com'),
+(20, 'Gerry Conglomerate', 'GerryTampan', '123', '0812589800', 'Donatur', 'gerryhasrom25@gmail.com'),
+(21, 'Muhammad Faqih Ajiputra', 'faqih', '123', '08134939393', 'Donatur', 'mfaqihajiputra66@gmail.com');
 
 --
 -- Indexes for dumped tables
@@ -73,7 +76,7 @@ ALTER TABLE `akun`
 -- AUTO_INCREMENT for table `akun`
 --
 ALTER TABLE `akun`
-  MODIFY `id_akun` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id_akun` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

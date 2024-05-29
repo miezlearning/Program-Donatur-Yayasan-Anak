@@ -123,6 +123,93 @@ class Admin(User):
         self.cek_login = False
 
 
+class Program:
+    def __init__(self, nama, deskripsi, target_donasi, donasi_terkumpul, tenggat):
+        self._nama = nama
+        self._deskripsi = deskripsi
+        self._target_donasi = target_donasi
+        self._donasi_terkumpul = donasi_terkumpul
+        self._tenggat = tenggat
+
+    # Getters
+    def get_nama(self):
+        return self._nama
+
+    def get_deskripsi(self):
+        return self._deskripsi
+
+    def get_target_donasi(self):
+        return self._target_donasi
+
+    def get_donasi_terkumpul(self):
+        return self._donasi_terkumpul
+
+    def get_tenggat(self):
+        return self._tenggat
+
+    # Setters
+    def set_nama(self, nama):
+        self._nama = nama
+
+    def set_deskripsi(self, deskripsi):
+        self._deskripsi = deskripsi
+
+    def set_target_donasi(self, target_donasi):
+        self._target_donasi = target_donasi
+
+    def set_donasi_terkumpul(self, donasi_terkumpul):
+        self._donasi_terkumpul = donasi_terkumpul
+
+    def set_tenggat(self, tenggat):
+        self._tenggat = tenggat
+
+    def __str__(self):
+        return (f"Nama Program: {self._nama}\n"
+                f"Deskripsi: {self._deskripsi}\n"
+                f"Target Donasi: {self._target_donasi}\n"
+                f"Donasi Terkumpul: {self._donasi_terkumpul}\n"
+                f"Tenggat: {self._tenggat}\n")
+
+    def edit(self, nama=None, deskripsi=None, target_donasi=None, donasi_terkumpul=None, tenggat=None):
+        if nama:
+            self.set_nama(nama)
+        if deskripsi:
+            self.set_deskripsi(deskripsi)
+        if target_donasi:
+            self.set_target_donasi(target_donasi)
+        if donasi_terkumpul:
+            self.set_donasi_terkumpul(donasi_terkumpul)
+        if tenggat:
+            self.set_tenggat(tenggat)
+
+class ProgramManager:
+    def __init__(self):
+        self.programs = []
+
+    def tambah_program(self, program):
+        self.programs.append(program)
+
+    def lihat_program(self):
+        return [program.get_nama() for program in self.programs]
+
+    def lihat_detail_program(self, idx):
+        if 0 <= idx < len(self.programs):
+            print(self.programs[idx])
+        else:
+            print("Program tidak ditemukan.")
+
+    def edit_program(self, idx, **kwargs):
+        if 0 <= idx < len(self.programs):
+            self.programs[idx].edit(**kwargs)
+        else:
+            print("Program tidak ditemukan.")
+
+    def hapus_program(self, idx):
+        if 0 <= idx < len(self.programs):
+            del self.programs[idx]
+        else:
+            print("Program tidak ditemukan.")
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━ LOGIN PAGE STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 
 
@@ -586,6 +673,8 @@ def UserProgramKami():
 # ━━━━━━━━━━━━━━━━━━━━━━━━ ADMIN STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 
 def menuAdmin(admin):
+    program_manager = ProgramManager()
+    Program("nama", "deskripsi", 15000.0, 5000000.0, "Rawrrr")
     while admin.cek_login:
         # print(f"Selamat datang Admin {admin.get_nama()}")
         # print("1. Manajemen Program Donasi")
@@ -603,7 +692,7 @@ def menuAdmin(admin):
         #     continue
 
         if pilihan == 0:
-            AdminManajemen_ProgramDonasi()
+            AdminManajemen_ProgramDonasi(program_manager)
         elif pilihan == 1:
             pass
         elif pilihan == 2:
@@ -611,7 +700,7 @@ def menuAdmin(admin):
         else:
             print("Pilihan tidak valid.")
 
-def AdminManajemen_ProgramDonasi():
+def AdminManajemen_ProgramDonasi(program_manager):
     while True:
         # print("Halaman Manajemen Program Yayasan")
         # print("1. Lihat Program Yayasan")
@@ -627,31 +716,103 @@ def AdminManajemen_ProgramDonasi():
         #     print("Inputan tidak boleh kosong.")
         #     continue
 
-        if pilihan == 0 :
-            pass
+        if pilihan == 0:
+            lihatProgram(program_manager)
         elif pilihan == 1:
-            pass
+            tambahProgram(program_manager)
         elif pilihan == 2:
-            pass
+            editProgram(program_manager)
         elif pilihan == 3:
-            pass
+            hapusProgram(program_manager)
         elif pilihan == 4:
             break
 
 
-def lihatProgram():
-    pass
+def lihatProgram(program_manager):
+    while True:
+        header = "Daftar Program Yayasan"
+        options = [program.get_nama() for program in program_manager.programs] + ["Kembali"]
+        pilihan = menu_navigasi(header, options)
+        if pilihan < len(program_manager.programs):
+            program_manager.lihat_detail_program(pilihan)
+            lanjut()
+        else:
+            break
 
-def tambahProgram():
-    pass
+def tambahProgram(program_manager):
+    nama = input("Nama Program: ")
+    deskripsi = input("Deskripsi Program: ")
+    target_donasi = float(input("Target Donasi: "))
+    donasi_terkumpul = 0.0  
+    tenggat = input("Tenggat Selesai Pengumpulan Dana: ")
+    program = Program(nama, deskripsi, target_donasi, donasi_terkumpul, tenggat)
+    program_manager.tambah_program(program)
+    print("Program berhasil ditambahkan.")
+    lanjut()
 
-def editProgram():
-    pass
+def editProgram(program_manager):
+    header = "Pilih Program untuk Diedit"
+    options = program_manager.lihat_program() + ["Kembali"]
+    pilihan = menu_navigasi(header, options)
+    if pilihan < len(program_manager.programs):
+        idx = pilihan
+        nama = input("Nama Program (biarkan kosong jika tidak ingin mengubah): ")
+        deskripsi = input("Deskripsi Program (biarkan kosong jika tidak ingin mengubah): ")
+        target_donasi = input("Target Donasi (biarkan kosong jika tidak ingin mengubah): ")
+        donasi_terkumpul = input("Donasi Terkumpul (biarkan kosong jika tidak ingin mengubah): ")
+        tenggat = input("Tenggat Selesai Pengumpulan Dana (biarkan kosong jika tidak ingin mengubah): ")
+        kwargs = {}
+        if nama:
+            kwargs['nama'] = nama
+        if deskripsi:
+            kwargs['deskripsi'] = deskripsi
+        if target_donasi:
+            kwargs['target_donasi'] = float(target_donasi)
+        if donasi_terkumpul:
+            kwargs['donasi_terkumpul'] = float(donasi_terkumpul)
+        if tenggat:
+            kwargs['tenggat'] = tenggat
+        program_manager.edit_program(idx, **kwargs)
+        print("Program berhasil diedit.")
+        lanjut()
 
-def hapusProgram():
-    pass
+def hapusProgram(program_manager):
+    header = "Pilih Program untuk Dihapus"
+    options = program_manager.lihat_program() + ["Kembali"]
+    pilihan = menu_navigasi(header, options)
+    if pilihan < len(program_manager.programs):
+        idx = pilihan
+        program_manager.hapus_program(idx)
+        lanjut()
+
+def hapusProgram(program_manager):
+    program_manager.lihat_program()
+    idx = int(input("Pilih nomor program yang akan dihapus: ")) - 1
+    program_manager.hapus_program(idx)
+    print("Program berhasil dihapus.")
+    lanjut()
+
+
+
+# Udin
+# 1. Beli Seragram > 200 Ribu
+# 2. Beli Peralatan Sekolah > 100
+
+# Donatur? pilih udin, otomatis apa yang dibutuhkan Udin donatur harus selesaikan dengan memberikan donasi. ( MISI )
 
 def AdminManajemen_AdikAsuh():
+    pass
+
+def tambahAnak():
+    pass
+
+def editAnak():
+    pass
+
+def hapusAnak():
+    pass
+
+def lihatAnak():
     pass
 
 menuLogin()
