@@ -472,7 +472,7 @@ def TentangKami():
         # pilihan = input("Pilih Menu >")
                     #0             1              2              3                                    4                     5
         menu = ['• Profil', '• Visi & Misi', '• Tujuan', '• Struktur Pengurus', '• Laporan Keuangan ( Coming Soon )', '• Kembali']
-        header = "Tentang Kami :"
+        header = "Informasi Tentang Kami :"
         pilihan  = menu_navigasi(header, menu)
         
         if pilihan == 0:
@@ -484,7 +484,7 @@ def TentangKami():
         elif pilihan == 3:
             struktur_pengurus()
         elif pilihan == 4:
-            pass #Nanti aja setelah donasi dan program kami selesai
+            laporan_keuangan() #Nanti aja setelah donasi dan program kami selesai
         elif pilihan == 5:
             break
         else:
@@ -494,29 +494,41 @@ def TentangKami():
 
 def profil():
     print('''
-Selamat datang di aplikasi Yayasan Anak Budi Pekerti! Yayasan kami didirikan untuk memberikan dukungan dan pendidikan bagi anak-anak yang kurang beruntung, menciptakan lingkungan yang penuh kasih dan mendukung perkembangan optimal mereka.
+=====================================================================================================================================================================
+                                                Selamat datang di aplikasi Yayasan Anak Budi Pekerti!
+=====================================================================================================================================================================
 
-Aplikasi ini memiliki berbagai fitur untuk memudahkan Anda, seperti halaman login yang lengkap dengan opsi register, pemulihan akun, pemulihan kata sandi, nama pengguna, dan nomor telepon yang terlupakan.
+Yayasan kami didirikan untuk memberikan dukungan dan pendidikan bagi anak-anak yang kurang beruntung, menciptakan lingkungan yang penuh kasih dan
+mendukung perkembangan optimal mereka.
 
-Menu utama untuk pengguna mencakup informasi tentang kami, profil yayasan, visi, misi, tujuan, struktur pengurus, dan laporan keuangan. Selain itu, Anda dapat menjelajahi program kami, melakukan donasi, mengikuti donasi mingguan, dan mendukung program adik asuh.
+Aplikasi ini memiliki berbagai fitur untuk memudahkan Anda, seperti halaman login yang lengkap dengan opsi register, pemulihan akun, pemulihan kata sandi
+nama pengguna, dan nomor telepon yang terlupakan.
 
-Bagi admin, tersedia fitur manajemen program donasi yang mencakup tambah, edit, hapus, lihat, dan konfirmasi program donasi. Juga ada manajemen adik asuh yang memungkinkan admin untuk menambah, mengedit, menghapus, dan melihat data anak.
+Menu utama untuk pengguna mencakup informasi tentang kami, profil yayasan, visi, misi, tujuan, struktur pengurus, dan laporan keuangan. Selain itu, Anda dapat
+menjelajahi program kami, melakukan donasi, mengikuti donasi mingguan, dan mendukung program adik asuh.
+
+Bagi admin, tersedia fitur manajemen program donasi yang mencakup tambah, edit, hapus, lihat, dan konfirmasi program donasi. Juga ada manajemen adik asuh yang
+memungkinkan admin untuk menambah, mengedit, menghapus, dan melihat data anak.
 
 Fitur tambahan dalam aplikasi ini termasuk koneksi database, karakter kata sandi, pembersihan layar terminal, dan email untuk pemulihan akun yang terlupakan.
 
-Dengan aplikasi ini, kami berharap dapat memudahkan Anda untuk berpartisipasi dalam mendukung anak-anak yang membutuhkan, melalui berbagai program yang kami tawarkan.
+Dengan aplikasi ini, kami berharap dapat memudahkan Anda untuk berpartisipasi dalam mendukung anak-anak yang membutuhkan, melalui berbagai program yang kami
+tawarkan.
+=====================================================================================================================================================================
 ''')
     lanjut()
-    TentangKami()
+    pembersih()
     return
 
 
 def visi_misi():
     print('''
+=====================================================================================================================================================================
 > Visi
 
-Menjadi yayasan terdepan yang menyediakan pendidikan dan dukungan komprehensif bagi anak-anak yang kurang beruntung, sehingga mereka dapat tumbuh menjadi individu yang berintegritas, berpengetahuan, dan mandiri.
-
+Menjadi yayasan terdepan yang menyediakan pendidikan dan dukungan komprehensif bagi anak-anak yang kurang beruntung, sehingga mereka dapat tumbuh menjadi individu
+yang berintegritas, berpengetahuan, dan mandiri.
+=====================================================================================================================================================================
 > Misi
 
 1. Menyediakan akses pendidikan berkualitas yang terjangkau bagi anak-anak yang kurang beruntung.
@@ -524,13 +536,15 @@ Menjadi yayasan terdepan yang menyediakan pendidikan dan dukungan komprehensif b
 3. Mengembangkan program-program yang berfokus pada peningkatan keterampilan hidup, kepercayaan diri, dan kreativitas anak-anak.
 4. Menjalin kerjasama dengan berbagai pihak untuk memperluas jangkauan dan efektivitas program-program yayasan.
 5. Menyediakan layanan kesehatan dan kesejahteraan yang komprehensif untuk mendukung pertumbuhan optimal anak-anak.
+=====================================================================================================================================================================
           ''')
     lanjut()
-    TentangKami()
+    pembersih()
     return
     
 def tujuan():
     print('''
+=====================================================================================================================================================================
 > Tujuan          
 
 1. Meningkatkan kualitas pendidikan dan prestasi akademis anak-anak melalui program pendidikan yang inovatif dan berkelanjutan.
@@ -538,18 +552,29 @@ def tujuan():
 3. Memastikan setiap anak memiliki akses ke fasilitas kesehatan dasar dan layanan pendukung psikologis.
 4. Memberdayakan anak-anak dengan keterampilan hidup yang dibutuhkan untuk menghadapi tantangan masa depan.
 5. Menggalang dukungan dan partisipasi masyarakat dalam upaya peningkatan kesejahteraan anak-anak yang kurang beruntung.
+=====================================================================================================================================================================
 ''')
     lanjut()
-    TentangKami()
+    pembersih()
     return
 
 def struktur_pengurus():
     org_chart()
     lanjut()
-    TentangKami()
+    pembersih()
+    return
 
 def laporan_keuangan():
-    pass
+    print('''
+=====================================================================================================================================================================
+>Laporan Keuangan
+          
+Halaman ini belum selesai, mohon gunakan halaman lain terlebih dahulu.
+=====================================================================================================================================================================
+''')
+    lanjut()
+    pembersih()
+    return
 
 
 def UserProgramKami():
