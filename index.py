@@ -693,7 +693,7 @@ def menuAdmin(admin):
         if pilihan == 0:
             AdminManajemen_ProgramDonasi(program_manager)
         elif pilihan == 1:
-            pass
+            AdminManajemen_AdikAsuh()
         elif pilihan == 2:
             admin.logout()
         else:
@@ -801,18 +801,97 @@ def hapusProgram(program_manager):
 # Donatur? pilih udin, otomatis apa yang dibutuhkan Udin donatur harus selesaikan dengan memberikan donasi. ( MENGAMBIL QUEST )
 
 def AdminManajemen_AdikAsuh():
-    pass
+    while True:
+        header = "Halaman Manajemen Adik Asuh"
+        menu = ['Lihat Data Adik Asuh','Tambah Data Adih Asuh', 'Edit Data Adik Asuh', 'Hapus Data Adik Asuh', 'Kembali']
+        pilihan = menu_navigasi(header,menu)
+
+        if pilihan == 0:
+            lihatAnak()
+        elif pilihan == 1:
+            tambahAnak()
+        elif pilihan == 2:
+            editAnak()
+        elif pilihan == 3:
+            hapusAnak()
+        elif pilihan == 4:
+            break
 
 def tambahAnak():
-    pass
+    pembersih()
+    print('''
+=====================================================================================================================================================================
+                                                                    Tambah Data Adik Asuh
+=====================================================================================================================================================================
+''')
+    a = input("Nama Adik Asuh: ")
+    b = input("Tempat Tinggal Adik Asuh: ")
+    c = input("Umur Adik Asuh: ")
+    d = input("Kebutuhan Adik Asuh: ")
+    # cek data yang sama
+    # if a == class atau panggil metode cek data sama
+    print ("Data adik asuh telah ditambahkan")
+    lanjut()
+    pembersih()
+    return
 
 def editAnak():
-    pass
+    pembersih()
+    header = """
+=====================================================================================================================================================================
+                                                                    Ubah Data Adik Asuh
+=====================================================================================================================================================================
+"""
+    options = ["Kembali"] # + classadikasuh.liat()
+    pilihan = menu_navigasi(header, options)
+    # if pilihan < len(program_manager.programs):
+    #     idx = input("Nama Adik Asuh: ")
+    #     a = input("Nama Adik Asuh: ")
+    #     b = input("Tempat Tinggal Adik Asuh: ")
+    #     c = input("Umur Adik Asuh: ")
+    #     d = input("Kebutuhan Adik Asuh: ")
+    #     pembersih()
+    #     return
 
 def hapusAnak():
-    pass
+    pembersih()
+    header = """
+=====================================================================================================================================================================
+                                                                    Hapus Data Adik Asuh
+=====================================================================================================================================================================
+"""
+    options = ["Kembali"] # + classadikasuh.liat()
+    pilihan = menu_navigasi(header, options)
+    # if pilihan < len(program_manager.programs):
+        # header = "Apakah anda yakin ingin menghapus data ini?"
+        # options = ['Ya', 'Tidak']
+        # konfirmasi = menu_navigasi(header, options)
+        # if konfirmasi == 1:
+        #     class.hapusanak(pilihan)
+        #     print("Data Adik Asuh di Hapus")
+        #     lanjut()
+        #     pembersih()
+        #     return
+        # elif konfirmasi == 2:
+        #     print("Penghapusan Dibatalkan")
+        #     lanjut()
+        #     pembersih()
+        #     return
 
 def lihatAnak():
+#     while True:
+#         header = """
+# =====================================================================================================================================================================
+#                                                                     Lihat Data Adik Asuh
+# =====================================================================================================================================================================
+# """
+#         options = [program.get_nama() for program in program_manager.programs] + ["Kembali"]
+#         pilihan = menu_navigasi(header, options)
+#         if pilihan < len(program_manager.programs):
+#             program_manager.lihat_detail_program(pilihan)
+#             lanjut()
+#         else:
+#             break
     pass
 
 menuLogin()
