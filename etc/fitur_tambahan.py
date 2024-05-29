@@ -93,8 +93,8 @@ def pembersih():
 def org_chart():
     print('''
                             _______________________________________________________
-                            |                        Budi Pekerti                  |
-                            |                       Yayasan Sosial                 |
+                            |                         Yayasan                      |
+                            |                       Budi Pekerti                   |
                             |______________________________________________________|
                                         |
                                         |-- Dewan Pembina
