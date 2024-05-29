@@ -528,7 +528,7 @@ def menuDonatur(donatur):
         if pilihan == 0 :
             TentangKami()
         elif pilihan == 1 :
-            pass
+            UserProgramKami()
         elif pilihan == 2 :
             pass
         elif pilihan == 3 :
@@ -665,7 +665,7 @@ Halaman ini belum selesai, mohon gunakan halaman lain terlebih dahulu.
 
 
 def UserProgramKami():
-    pass
+    lihatProgram()
 
 
        
@@ -674,7 +674,6 @@ def UserProgramKami():
 
 def menuAdmin(admin):
     program_manager = ProgramManager()
-    Program("nama", "deskripsi", 15000.0, 5000000.0, "Rawrrr")
     while admin.cek_login:
         # print(f"Selamat datang Admin {admin.get_nama()}")
         # print("1. Manajemen Program Donasi")
@@ -794,11 +793,12 @@ def hapusProgram(program_manager):
 
 
 
+# QUEST
 # Udin
 # 1. Beli Seragram > 200 Ribu
 # 2. Beli Peralatan Sekolah > 100
 
-# Donatur? pilih udin, otomatis apa yang dibutuhkan Udin donatur harus selesaikan dengan memberikan donasi. ( MISI )
+# Donatur? pilih udin, otomatis apa yang dibutuhkan Udin donatur harus selesaikan dengan memberikan donasi. ( MENGAMBIL QUEST )
 
 def AdminManajemen_AdikAsuh():
     pass
