@@ -43,22 +43,3 @@ class ZakatCalculator:
     def hitung_total_zakat(self):
         total_zakat = 0.025 * (self.emas + self.perak) + 0.025 * self.tabungan - self.hutang
         print(f"Total jumlah zakat yang harus Anda bayarkan: {total_zakat} rupiah")
-
-
-def main():
-    print("Selamat datang di Kalkulator Zakat")
-    calculator = ZakatCalculator()
-
-    calculator.input_asset()
-
-    print("\n-- Hitung Zakat --")
-    calculator.hitung_zakat_emas()
-    calculator.hitung_zakat_perak()
-    calculator.hitung_zakat_tabungan()
-
-    print("\n-- Total Zakat --")
-    calculator.hitung_total_zakat()
-
-
-if __name__ == "__main__":
-    main()

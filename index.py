@@ -8,7 +8,8 @@ from mysql.connector import Error
 # Modul Password Char
 from pwinput import pwinput as enkripsi_password
 # Modul Fitur Tambahan
-from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih , lanjut, org_chart, print_menu, menu_navigasi
+from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih, lanjut, org_chart, menu_navigasi, kalkulatorzakat
+
 # Modul Keymenu
 
 
@@ -123,6 +124,9 @@ class Admin(User):
         self.cek_login = False
 
 
+# =====================================
+# Program Yayasan
+# =====================================
 class Program:
     def __init__(self, nama, deskripsi, target_donasi, donasi_terkumpul, tenggat):
         self._nama = nama
@@ -209,6 +213,90 @@ class ProgramManager:
             del self.programs[idx]
         else:
             print("Program tidak ditemukan.")
+
+# ====================================
+# Anak Asuh
+# ====================================
+class AdikAsuh:
+    def __init__(self, nama, tempat_tinggal, umur, kebutuhan):
+        self._nama = nama
+        self._tempat_tinggal = tempat_tinggal
+        self._umur = umur
+        self._kebutuhan = kebutuhan
+
+    # Getters
+    def get_nama(self):
+        return self._nama
+
+    def get_tempat_tinggal(self):
+        return self._tempat_tinggal
+
+    def get_umur(self):
+        return self._umur
+
+    def get_kebutuhan(self):
+        return self._kebutuhan
+
+    # Setters
+    def set_nama(self, nama):
+        self._nama = nama
+
+    def set_tempat_tinggal(self, tempat_tinggal):
+        self._tempat_tinggal = tempat_tinggal
+
+    def set_umur(self, umur):
+        self._umur = umur
+
+    def set_kebutuhan(self, kebutuhan):
+        self._kebutuhan = kebutuhan
+
+    def __str__(self):
+        return (f"Nama: {self._nama}\n"
+                f"Tempat Tinggal: {self._tempat_tinggal}\n"
+                f"Umur: {self._umur}\n"
+                f"Kebutuhan: {self._kebutuhan}\n")
+
+
+class AdikAsuhManager:
+    def __init__(self):
+        self.anak_asuh = []
+
+    def tambah_anak(self, anak):
+        self.anak_asuh.append(anak)
+
+    def lihat_anak(self):
+        return [anak.get_nama() for anak in self.anak_asuh]
+
+    def lihat_detail_anak(self, idx):
+        if 0 <= idx < len(self.anak_asuh):
+            print(self.anak_asuh[idx])
+        else:
+            print("Anak Asuh tidak ditemukan.")
+
+    def edit_anak(self, idx, **kwargs):
+        if 0 <= idx < len(self.anak_asuh):
+            anak = self.anak_asuh[idx]
+            if 'nama' in kwargs:
+                anak.set_nama(kwargs['nama'])
+            if 'tempat_tinggal' in kwargs:
+                anak.set_tempat_tinggal(kwargs['tempat_tinggal'])
+            if 'umur' in kwargs:
+                anak.set_umur(kwargs['umur'])
+            if 'kebutuhan' in kwargs:
+                anak.set_kebutuhan(kwargs['kebutuhan'])
+        else:
+            print("Anak Asuh tidak ditemukan.")
+
+    def hapus_anak(self, idx):
+        if 0 <= idx < len(self.anak_asuh):
+            del self.anak_asuh[idx]
+        else:
+            print("Anak Asuh tidak ditemukan.")
+
+program_manager = ProgramManager()
+adik_asuh_manager = AdikAsuhManager()
+
+
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ LOGIN PAGE STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 
@@ -502,6 +590,8 @@ def forgot_no_telepon():
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ USER STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
+
+
 def menuDonatur(donatur):
     
     while donatur.cek_login:
@@ -512,7 +602,8 @@ def menuDonatur(donatur):
         # print("4. Donasi Mingguan")    
         # print("5. Adik Asuh") 
         # print("6. Pengaturan Akun")
-        # print("0. Logout")'
+        # print("0. Logout")
+
         #             0                1            2           3               4              5               6
         menu = ['Tentang Kami', 'Program Kami', 'Donasi', 'Donasi Mingguan', 'Adik Asuh', 'Pengaturan Akun','Logout']
         pilihan = menu_navigasi(header, menu)
@@ -532,7 +623,7 @@ def menuDonatur(donatur):
         elif pilihan == 2 :
             pass
         elif pilihan == 3 :
-            pass
+            DonasiMingguan()
         elif pilihan == 4 :
             pass
         elif pilihan == 5 :
@@ -542,6 +633,21 @@ def menuDonatur(donatur):
         else:
             pass
 
+
+def DonasiMingguan():
+    while True:
+        header = "Halaman Donasi Mingguan"
+        menu = ['Donasi Mingguan', 'Kalkulator Zakat', 'Kembali']
+        pilihan = menu_navigasi(header,menu)
+        if pilihan == 1:
+            kalkulatorzakat()
+        elif pilihan == 2:
+            pass
+        elif pilihan == 3:
+            break
+        else:
+            pass
+        
 
 
 
@@ -673,7 +779,7 @@ def UserProgramKami():
 # ━━━━━━━━━━━━━━━━━━━━━━━━ ADMIN STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 
 def menuAdmin(admin):
-    program_manager = ProgramManager()
+    
     while admin.cek_login:
         # print(f"Selamat datang Admin {admin.get_nama()}")
         # print("1. Manajemen Program Donasi")
@@ -693,7 +799,7 @@ def menuAdmin(admin):
         if pilihan == 0:
             AdminManajemen_ProgramDonasi(program_manager)
         elif pilihan == 1:
-            AdminManajemen_AdikAsuh()
+            AdminManajemen_AdikAsuh(adik_asuh_manager)
         elif pilihan == 2:
             admin.logout()
         else:
@@ -784,12 +890,12 @@ def hapusProgram(program_manager):
         program_manager.hapus_program(idx)
         lanjut()
 
-def hapusProgram(program_manager):
-    program_manager.lihat_program()
-    idx = int(input("Pilih nomor program yang akan dihapus: ")) - 1
-    program_manager.hapus_program(idx)
-    print("Program berhasil dihapus.")
-    lanjut()
+# def hapusProgram(program_manager):
+#     program_manager.lihat_program()
+#     idx = int(input("Pilih nomor program yang akan dihapus: ")) - 1
+#     program_manager.hapus_program(idx)
+#     print("Program berhasil dihapus.")
+#     lanjut()
 
 
 
@@ -800,98 +906,114 @@ def hapusProgram(program_manager):
 
 # Donatur? pilih udin, otomatis apa yang dibutuhkan Udin donatur harus selesaikan dengan memberikan donasi. ( MENGAMBIL QUEST )
 
-def AdminManajemen_AdikAsuh():
+
+
+def AdminManajemen_AdikAsuh(adik_asuh_manager):
     while True:
         header = "Halaman Manajemen Adik Asuh"
-        menu = ['Lihat Data Adik Asuh','Tambah Data Adih Asuh', 'Edit Data Adik Asuh', 'Hapus Data Adik Asuh', 'Kembali']
+        menu = ['Lihat Data Adik Asuh','Tambah Data Adik Asuh', 'Edit Data Adik Asuh', 'Hapus Data Adik Asuh', 'Kembali']
         pilihan = menu_navigasi(header,menu)
 
         if pilihan == 0:
-            lihatAnak()
+            lihatAnakAsuh(adik_asuh_manager)
         elif pilihan == 1:
-            tambahAnak()
+            tambahAnakAsuh(adik_asuh_manager)
         elif pilihan == 2:
-            editAnak()
+            editAnakAsuh(adik_asuh_manager)
         elif pilihan == 3:
-            hapusAnak()
+            hapusAnakAsuh(adik_asuh_manager)
         elif pilihan == 4:
             break
 
-def tambahAnak():
+def tambahAnakAsuh(adik_asuh_manager):
     pembersih()
     print('''
 =====================================================================================================================================================================
                                                                     Tambah Data Adik Asuh
 =====================================================================================================================================================================
 ''')
-    a = input("Nama Adik Asuh: ")
-    b = input("Tempat Tinggal Adik Asuh: ")
-    c = input("Umur Adik Asuh: ")
-    d = input("Kebutuhan Adik Asuh: ")
-    # cek data yang sama
-    # if a == class atau panggil metode cek data sama
-    print ("Data adik asuh telah ditambahkan")
+    nama = input("Nama Adik Asuh: ")
+    tempat_tinggal = input("Tempat Tinggal Adik Asuh: ")
+    umur = input("Umur Adik Asuh: ")
+    kebutuhan = input("Kebutuhan Adik Asuh: ")
+    anak = AdikAsuh(nama, tempat_tinggal, umur, kebutuhan)
+    adik_asuh_manager.tambah_anak(anak)
+    print("Data adik asuh telah ditambahkan")
     lanjut()
     pembersih()
-    return
 
-def editAnak():
+def editAnakAsuh(adik_asuh_manager):
     pembersih()
     header = """
 =====================================================================================================================================================================
                                                                     Ubah Data Adik Asuh
 =====================================================================================================================================================================
 """
-    options = ["Kembali"] # + classadikasuh.liat()
+    options = adik_asuh_manager.lihat_anak() + ["Kembali"]
     pilihan = menu_navigasi(header, options)
-    # if pilihan < len(program_manager.programs):
-    #     idx = input("Nama Adik Asuh: ")
-    #     a = input("Nama Adik Asuh: ")
-    #     b = input("Tempat Tinggal Adik Asuh: ")
-    #     c = input("Umur Adik Asuh: ")
-    #     d = input("Kebutuhan Adik Asuh: ")
-    #     pembersih()
-    #     return
+    if pilihan < len(adik_asuh_manager.anak_asuh):
+        idx = pilihan
+        nama = input("Nama Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
+        tempat_tinggal = input("Tempat Tinggal Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
+        umur = input("Umur Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
+        kebutuhan = input("Kebutuhan Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
+        kwargs = {}
+        if nama:
+            kwargs['nama'] = nama
+        if tempat_tinggal:
+            kwargs['tempat_tinggal'] = tempat_tinggal
+        if umur:
+            kwargs['umur'] = umur
+        if kebutuhan:
+            kwargs['kebutuhan'] = kebutuhan
+        adik_asuh_manager.edit_anak(idx, **kwargs)
+        print("Data adik asuh telah diedit.")
+        lanjut()
+        pembersih()
 
-def hapusAnak():
+def hapusAnakAsuh(adik_asuh_manager):
     pembersih()
     header = """
 =====================================================================================================================================================================
                                                                     Hapus Data Adik Asuh
 =====================================================================================================================================================================
 """
-    options = ["Kembali"] # + classadikasuh.liat()
+    options = adik_asuh_manager.lihat_anak() + ["Kembali"]
     pilihan = menu_navigasi(header, options)
-    # if pilihan < len(program_manager.programs):
-        # header = "Apakah anda yakin ingin menghapus data ini?"
-        # options = ['Ya', 'Tidak']
-        # konfirmasi = menu_navigasi(header, options)
-        # if konfirmasi == 1:
-        #     class.hapusanak(pilihan)
-        #     print("Data Adik Asuh di Hapus")
-        #     lanjut()
-        #     pembersih()
-        #     return
-        # elif konfirmasi == 2:
-        #     print("Penghapusan Dibatalkan")
-        #     lanjut()
-        #     pembersih()
-        #     return
+    if pilihan < len(adik_asuh_manager.anak_asuh):
+        idx = pilihan
+        header = "Apakah anda yakin ingin menghapus data ini?"
+        options = ['Ya', 'Tidak']
+        konfirmasi = menu_navigasi(header, options)
+        if konfirmasi == 0:
+            adik_asuh_manager.hapus_anak(idx)
+            print("Data Adik Asuh dihapus")
+            lanjut()
+            pembersih()
+        elif konfirmasi == 1:
+            print("Penghapusan dibatalkan")
+            lanjut()
+            pembersih()
 
-def lihatAnak():
-#     while True:
-#         header = """
-# =====================================================================================================================================================================
-#                                                                     Lihat Data Adik Asuh
-# =====================================================================================================================================================================
-# """
-#         options = [program.get_nama() for program in program_manager.programs] + ["Kembali"]
-#         pilihan = menu_navigasi(header, options)
-#         if pilihan < len(program_manager.programs):
-#             program_manager.lihat_detail_program(pilihan)
-#             lanjut()
-#         else:
-#             break
-    pass
+def lihatAnakAsuh(adik_asuh_manager):
+    while True:
+        header = """
+====================================================================================================================================================================
+                                                                    Lihat Data Adik Asuh
+====================================================================================================================================================================
+"""
+        options = adik_asuh_manager.lihat_anak() + ["Kembali"]
+        pilihan = menu_navigasi(header, options)
+        if pilihan < len(adik_asuh_manager.anak_asuh):
+            adik_asuh_manager.lihat_detail_anak(pilihan)
+            lanjut()
+        else:
+            break
+
 
 menuLogin()
+
+
+# Checkpoint Sementara :
+# Lanjutkan masalah adik asuh, setelah itu ubah program yayasan dan adik asuh menggunakan mysql atau database.
+# SLEEEPPPPPPPPPPP DULU

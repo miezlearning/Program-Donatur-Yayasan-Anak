@@ -4,6 +4,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
+from etc.kalkulator_zakat import ZakatCalculator
 import os
 import readchar
 
@@ -133,3 +134,18 @@ def menu_navigasi(header, options):
             selected_index = (selected_index + 1) % len(options)
         elif key == readchar.key.ENTER:
             return selected_index
+        
+def kalkulatorzakat():
+    print("Selamat datang di Kalkulator Zakat")
+    calculator = ZakatCalculator()
+
+    calculator.input_asset()
+
+    print("\n-- Hitung Zakat --")
+    calculator.hitung_zakat_emas()
+    calculator.hitung_zakat_perak()
+    calculator.hitung_zakat_tabungan()
+
+    print("\n-- Total Zakat --")
+    calculator.hitung_total_zakat()
+    return

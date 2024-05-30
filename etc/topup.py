@@ -84,11 +84,8 @@ def send_email(receiver_email, code):
         server.send_message(msg)
 
 def top_up(amount):
-    # Generate a random code
     code = generate_random_code()
     
-    # Send email with the code
-    # Replace receiver_email with the actual email address of the user
     receiver_email = 'm.alif7890@gmail.com'
     send_email(receiver_email, code)
     
@@ -99,7 +96,6 @@ def top_up(amount):
         entered_code = input('Enter the code received via email: ')
         
         if entered_code == code:
-            # Process the top-up with the specified amount
             print(f'Top-up successful! Amount: {amount}')
             break
         
