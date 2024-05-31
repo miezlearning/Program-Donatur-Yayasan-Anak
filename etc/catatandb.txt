@@ -1,0 +1,10 @@
+BUAT TABEL programs
+=====
+CREATE TABLE IF NOT EXISTS programs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama VARCHAR(255) NOT NULL,
+    deskripsi TEXT,
+    target_donasi DECIMAL(15, 2) NOT NULL,
+    donasi_terkumpul DECIMAL(15, 2) NOT NULL DEFAULT 0,
+    tenggat DATE NOT NULL
+);

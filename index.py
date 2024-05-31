@@ -3,6 +3,7 @@
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ IMPORT MODULE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 # Modul Koneksi Database 
+import datetime
 import mysql.connector
 from mysql.connector import Error
 # Modul Password Char
@@ -10,7 +11,10 @@ from pwinput import pwinput as enkripsi_password
 # Modul Fitur Tambahan
 from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih, lanjut, org_chart, menu_navigasi, kalkulatorzakat
 
-# Modul Keymenu
+
+# Modul GUI
+import tkinter as tk
+from tkinter import messagebox
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -31,7 +35,7 @@ class Database:
                 database="pbotest"
             )
             if mydb.is_connected():
-                # print("Berhasil Koneksi ke Database")
+                print("Berhasil Koneksi ke Database")
                 return mydb
             else:
                 print("Koneksi Gagal")
@@ -40,21 +44,21 @@ class Database:
             print(f"Terjadi kesalahan saat menghubungkan ke database: {e}")
             return None
 
-    def query(self, query):
+    def query(self, query, params=None):
         if self.connection:
             try:
                 CMD = self.connection.cursor()
-                CMD.execute(query)
+                CMD.execute(query, params)
                 result = CMD.fetchall()
                 self.connection.commit()
                 return result
             except Error as e:
                 print(f"Terjadi kesalahan saat menjalankan query: {e}")
+                self.connection.rollback()
                 return None
         else:
             print("Tidak dapat membuat koneksi ke database untuk menjalankan query.")
             return None
-
 
     def tutup_koneksi(self):
         if self.connection.is_connected():
@@ -67,7 +71,6 @@ class Database:
                 print(f"Terjadi kesalahan saat menutup koneksi ke database: {e}")
 
 
-
 # <> Inisialisasi Modul database.
 db = Database()
 
@@ -75,7 +78,8 @@ db = Database()
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ CLASS STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 class User():
-    def __init__(self, username, password):
+    def __init__(self, user_id, username, password):
+        self.__id = user_id
         self.__username = username
         self.__password = password
 
@@ -85,12 +89,16 @@ class User():
     def get_password(self):
         return self.__password
     
+    def get_id(self):
+        return self.__id
+
+    
   
 
 
 class Donatur(User):
-    def __init__(self, nama, username, password, notelp, email):
-        super().__init__(username, password)
+    def __init__(self,user_id, nama, username, password, notelp, email):
+        super().__init__(user_id,username, password)
         self.__notelp = notelp
         self.__nama = nama
         self.__email = email
@@ -112,8 +120,8 @@ class Donatur(User):
 
 
 class Admin(User):
-    def __init__(self, nama, username, password):
-        super().__init__(username, password)
+    def __init__(self,user_id, nama, username, password):
+        super().__init__(user_id,username, password)
         self.__nama = nama
         self.cek_login = True
     
@@ -150,22 +158,9 @@ class Program:
 
     def get_tenggat(self):
         return self._tenggat
-
-    # Setters
-    def set_nama(self, nama):
-        self._nama = nama
-
-    def set_deskripsi(self, deskripsi):
-        self._deskripsi = deskripsi
-
-    def set_target_donasi(self, target_donasi):
-        self._target_donasi = target_donasi
-
-    def set_donasi_terkumpul(self, donasi_terkumpul):
-        self._donasi_terkumpul = donasi_terkumpul
-
-    def set_tenggat(self, tenggat):
-        self._tenggat = tenggat
+    
+    def tambah_donasi(self, jumlah):
+        self._donasi_terkumpul += jumlah
 
     def __str__(self):
         return (f"Nama Program: {self._nama}\n"
@@ -174,45 +169,113 @@ class Program:
                 f"Donasi Terkumpul: {self._donasi_terkumpul}\n"
                 f"Tenggat: {self._tenggat}\n")
 
-    def edit(self, nama=None, deskripsi=None, target_donasi=None, donasi_terkumpul=None, tenggat=None):
-        if nama:
-            self.set_nama(nama)
-        if deskripsi:
-            self.set_deskripsi(deskripsi)
-        if target_donasi:
-            self.set_target_donasi(target_donasi)
-        if donasi_terkumpul:
-            self.set_donasi_terkumpul(donasi_terkumpul)
-        if tenggat:
-            self.set_tenggat(tenggat)
-
+    
 class ProgramManager:
-    def __init__(self):
-        self.programs = []
+    def __init__(self, db):
+        self.db = db
 
     def tambah_program(self, program):
-        self.programs.append(program)
+        query = """
+        INSERT INTO programs (nama, deskripsi, target_donasi, donasi_terkumpul, tenggat)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        params = (
+            program.get_nama(),
+            program.get_deskripsi(),
+            program.get_target_donasi(),
+            program.get_donasi_terkumpul(),
+            program.get_tenggat()
+        )
+        result = self.db.query(query, params)
+        if result is not None:
+            print("Program berhasil ditambahkan.")
+        else:
+            print("Gagal menambahkan program.")
 
     def lihat_program(self):
-        return [program.get_nama() for program in self.programs]
+        query = "SELECT id_program, nama FROM programs"
+        result = self.db.query(query)
+        return result
 
     def lihat_detail_program(self, idx):
-        if 0 <= idx < len(self.programs):
-            print(self.programs[idx])
+        query = "SELECT nama, deskripsi, target_donasi, donasi_terkumpul, tenggat FROM programs WHERE id_program = %s"
+        result = self.db.query(query, (idx,))
+        if result:
+            program = Program(*result[0])
+            print(program)
+            return program
         else:
             print("Program tidak ditemukan.")
+            return None
+
+    def update_donasi_terkumpul(self, program_id, jumlah):
+        query = "UPDATE programs SET donasi_terkumpul = donasi_terkumpul + %s WHERE id_program = %s"
+        result = self.db.query(query, (jumlah, program_id))
+        if result is not None:
+            print("Donasi berhasil diperbarui.")
+        else:
+            print("Gagal memperbarui donasi.")
+
+    def catat_donasi(self, id_akun, id_program, jumlah, nama_donatur, pesan):
+        query = """
+        INSERT INTO donasi (id_akun, id_program, jumlah_donasi, nama_donatur, pesan)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        params = (id_akun, id_program, jumlah, nama_donatur, pesan)
+        result = self.db.query(query, params)
+        if result is not None:
+            print("Donasi berhasil dicatat.")
+        else:
+            print("Gagal mencatat donasi.")
 
     def edit_program(self, idx, **kwargs):
-        if 0 <= idx < len(self.programs):
-            self.programs[idx].edit(**kwargs)
-        else:
-            print("Program tidak ditemukan.")
+        set_clause = ", ".join([f"{key} = %s" for key in kwargs])
+        params = list(kwargs.values()) + [idx]
+        query = f"UPDATE programs SET {set_clause} WHERE id_program = %s"
+        self.db.query(query, params)
 
     def hapus_program(self, idx):
-        if 0 <= idx < len(self.programs):
-            del self.programs[idx]
-        else:
-            print("Program tidak ditemukan.")
+        window = tk.Tk()
+        window.title("Konfirmasi Hapus")
+        
+        label = tk.Label(window, text="Apakah Anda yakin ingin menghapus program ini?")
+        label.pack(pady=(25, 10))
+        
+        def hapus():
+            query = "DELETE FROM programs WHERE id_program = %s"
+            self.db.query(query, (idx,))
+            messagebox.showinfo("Informasi", "Program berhasil dihapus.")
+            window.destroy()
+        
+        def batal():
+            messagebox.showinfo("Informasi", "Penghapusan program dibatalkan.")
+            window.destroy()
+
+        def tombol_ya_enter(event):
+            hapus_button.config(bg="green")
+
+        def tombol_ya_leave(event):
+            hapus_button.config(bg="SystemButtonFace")
+
+        def tombol_tidak_enter(event):
+            batal_button.config(bg="red")
+
+        def tombol_tidak_leave(event):
+            batal_button.config(bg="SystemButtonFace")
+        
+        hapus_button = tk.Button(window, text="Ya", command=hapus)
+        hapus_button.pack(side=tk.LEFT, pady=25, padx=65)
+        hapus_button.bind("<Enter>", tombol_ya_enter)
+        hapus_button.bind("<Leave>", tombol_ya_leave)
+
+        batal_button = tk.Button(window, text="Tidak", command=batal)
+        batal_button.pack(side=tk.RIGHT, pady=25, padx=65)
+        batal_button.bind("<Enter>", tombol_tidak_enter)
+        batal_button.bind("<Leave>", tombol_tidak_leave)
+
+        
+        
+        window.mainloop()
 
 # ====================================
 # Anak Asuh
@@ -293,7 +356,7 @@ class AdikAsuhManager:
         else:
             print("Anak Asuh tidak ditemukan.")
 
-program_manager = ProgramManager()
+program_manager = ProgramManager(db)
 adik_asuh_manager = AdikAsuhManager()
 
 
@@ -353,24 +416,25 @@ def login():
             tipe_kredensial = "username"
         
         try:
-            kueri = db.query(f"SELECT nama, username, password, role, notelp, email FROM akun WHERE {tipe_kredensial} = '{credential}' AND password = '{password}'")
+            kueri = db.query(f"SELECT id_akun, nama, username, password, role, notelp, email FROM akun WHERE {tipe_kredensial} = '{credential}' AND password = '{password}'")
             if not kueri:
                 print(f"{tipe_kredensial} atau password yang dimasukkan salah.")
                 lanjut()
                 percobaan += 1
             else:
-                role = kueri[0][3]
+                role = kueri[0][4]
                 if role == "Donatur":
-                    donatur = Donatur(kueri[0][0], kueri[0][1], password, kueri[0][4], kueri[0][5])
+                    donatur = Donatur(kueri[0][0],kueri[0][1], kueri[0][2], password, kueri[0][5], kueri[0][6])
                     menuDonatur(donatur)
                 elif role == "Admin":
-                    admin = Admin(kueri[0][0], kueri[0][1], password)
+                    admin = Admin(kueri[0][0],kueri[0][1], kueri[0][2], password)
                     menuAdmin(admin)
                 else:
                     print("Role tidak valid.")
                 break
         except Exception as e:
             print(f"Terjadi kesalahan saat melakukan login: {e}")
+            lanjut()
 
     if percobaan == maks:
         print("Anda telah melebihi batas percobaan login. Silakan coba lagi nanti.")
@@ -430,6 +494,7 @@ def register():
             donatur = Donatur(nama, username, password, notelp, email)
             db.query(f"INSERT INTO akun(nama, username, password, notelp, role, email) VALUES ('{donatur.get_nama()}','{donatur.get_username()}', '{donatur.get_password()}', '{donatur.get_notelp()}', 'Donatur', '{donatur.get_email()}')")
             print("Berhasil Daftar...")
+            lanjut()
             break  
         except Exception as e:
             print(f"Terjadi kesalahan saat melakukan register: {e}")
@@ -596,32 +661,14 @@ def menuDonatur(donatur):
     
     while donatur.cek_login:
         header = f"Selamat datang Donatur {donatur.get_nama()}"
-        # print("1. Tentang Kami")
-        # print("2. Program Kami")
-        # print("3. Donasi")    
-        # print("4. Donasi Mingguan")    
-        # print("5. Adik Asuh") 
-        # print("6. Pengaturan Akun")
-        # print("0. Logout")
-
-        #             0                1            2           3               4              5               6
         menu = ['Tentang Kami', 'Program Kami', 'Donasi', 'Donasi Mingguan', 'Adik Asuh', 'Pengaturan Akun','Logout']
         pilihan = menu_navigasi(header, menu)
-
-        # pilihan = input("Pilih Menu > ")
-        # if not pilihan:
-        #     print("Inputan tidak boleh kosong.")
-        #     continue
-        # if not pilihan.isdigit():
-        #     print("Inputan harus angka.")
-        #     continue
-
         if pilihan == 0 :
             TentangKami()
         elif pilihan == 1 :
             UserProgramKami()
         elif pilihan == 2 :
-            pass
+            donasiProgram(donatur)
         elif pilihan == 3 :
             DonasiMingguan()
         elif pilihan == 4 :
@@ -771,8 +818,29 @@ Halaman ini belum selesai, mohon gunakan halaman lain terlebih dahulu.
 
 
 def UserProgramKami():
-    lihatProgram()
+    lihatProgram(program_manager)
 
+
+
+def donasiProgram(donatur):
+    header = "Pilih Program untuk Donasi"
+    programs = program_manager.lihat_program()
+    options = [nama for id, nama in programs] + ["Kembali"]
+    pilihan = menu_navigasi(header, options)
+    if pilihan < len(programs):
+        program_id = programs[pilihan][0]
+        program = program_manager.lihat_detail_program(program_id)
+        if program:
+            jumlah_donasi = int(input("Masukkan jumlah donasi: "))
+            pesan_donasi = input("Masukkan pesan untuk donasi: ")
+            nama_donatur = donatur.get_nama()
+            program_manager.update_donasi_terkumpul(program_id, jumlah_donasi)
+            program_manager.catat_donasi(donatur.get_id(), program_id, jumlah_donasi, nama_donatur, pesan_donasi)
+            program.tambah_donasi(jumlah_donasi)
+            print(f"Terima kasih atas donasi Anda! Donasi terkumpul: {program.get_donasi_terkumpul()} / {program.get_target_donasi()}")
+        lanjut()
+    else:
+        pass
 
        
 
@@ -833,39 +901,75 @@ def AdminManajemen_ProgramDonasi(program_manager):
             break
 
 
+# def lihatProgram(program_manager):
+#     while True:
+#         header = "Daftar Program Yayasan"
+#         programs = program_manager.lihat_program()
+#         options = [nama for id, nama in programs] + ["Kembali"]
+#         pilihan = menu_navigasi(header, options)
+#         if pilihan < len(programs):
+#             program_manager.lihat_detail_program(programs[pilihan][0])
+#             lanjut()
+#         else:
+#             break
+
 def lihatProgram(program_manager):
     while True:
         header = "Daftar Program Yayasan"
-        options = [program.get_nama() for program in program_manager.programs] + ["Kembali"]
+        programs = program_manager.lihat_program()
+        options = [nama for id, nama in programs] + ["Kembali"]
         pilihan = menu_navigasi(header, options)
-        if pilihan < len(program_manager.programs):
-            program_manager.lihat_detail_program(pilihan)
+        if pilihan < len(programs):
+            program_id = programs[pilihan][0]
+            program = program_manager.lihat_detail_program(program_id)
+            if program:
+                print(f"Progress Donasi: {program.get_donasi_terkumpul()} / {program.get_target_donasi()}")
             lanjut()
         else:
             break
+
+
 
 def tambahProgram(program_manager):
     nama = input("Nama Program: ")
     deskripsi = input("Deskripsi Program: ")
     target_donasi = float(input("Target Donasi: "))
     donasi_terkumpul = 0.0  
-    tenggat = input("Tenggat Selesai Pengumpulan Dana: ")
+    while True:
+        tenggat = input("Tenggat Selesai Pengumpulan Dana (YYYY-MM-DD): ")
+        try:
+            if not tenggat:
+                raise ValueError("Tenggat tidak boleh kosong.")
+            datetime.datetime.strptime(tenggat, '%Y-%m-%d')
+            break
+        except ValueError as e:
+            print("Error:", e)
+
     program = Program(nama, deskripsi, target_donasi, donasi_terkumpul, tenggat)
     program_manager.tambah_program(program)
-    print("Program berhasil ditambahkan.")
     lanjut()
+
 
 def editProgram(program_manager):
     header = "Pilih Program untuk Diedit"
-    options = program_manager.lihat_program() + ["Kembali"]
+    programs = program_manager.lihat_program()
+    options = [nama for id, nama in programs] + ["Kembali"]
     pilihan = menu_navigasi(header, options)
-    if pilihan < len(program_manager.programs):
-        idx = pilihan
+    if pilihan < len(programs):
+        idx = programs[pilihan][0]
         nama = input("Nama Program (biarkan kosong jika tidak ingin mengubah): ")
         deskripsi = input("Deskripsi Program (biarkan kosong jika tidak ingin mengubah): ")
         target_donasi = input("Target Donasi (biarkan kosong jika tidak ingin mengubah): ")
         donasi_terkumpul = input("Donasi Terkumpul (biarkan kosong jika tidak ingin mengubah): ")
-        tenggat = input("Tenggat Selesai Pengumpulan Dana (biarkan kosong jika tidak ingin mengubah): ")
+        while True:
+            tenggat = input("Tenggat Selesai Pengumpulan Dana (biarkan kosong jika tidak ingin mengubah): ")
+            try:
+                if not tenggat:
+                    raise ValueError("Tenggat tidak boleh kosong.")
+                datetime.datetime.strptime(tenggat, '%Y-%m-%d')
+                break
+            except ValueError as e:
+                print("Error:", e)
         kwargs = {}
         if nama:
             kwargs['nama'] = nama
@@ -883,10 +987,11 @@ def editProgram(program_manager):
 
 def hapusProgram(program_manager):
     header = "Pilih Program untuk Dihapus"
-    options = program_manager.lihat_program() + ["Kembali"]
+    programs = program_manager.lihat_program()
+    options = [nama for id, nama in programs] + ["Kembali"]
     pilihan = menu_navigasi(header, options)
-    if pilihan < len(program_manager.programs):
-        idx = pilihan
+    if pilihan < len(programs):
+        idx = programs[pilihan][0]
         program_manager.hapus_program(idx)
         lanjut()
 
