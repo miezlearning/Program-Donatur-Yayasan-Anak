@@ -9,7 +9,7 @@ from mysql.connector import Error
 # Modul Password Char
 from pwinput import pwinput as enkripsi_password
 # Modul Fitur Tambahan
-from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih, lanjut, org_chart, menu_navigasi, kalkulatorzakat
+from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih, lanjut, org_chart, menu_navigasi, kalkulatorzakat, submenu_navigasi
 
 
 # Modul GUI
@@ -227,6 +227,16 @@ class ProgramManager:
             print("Donasi berhasil dicatat.")
         else:
             print("Gagal mencatat donasi.")
+    
+    def lihat_histori_donasi(self, id_program):
+        query = """
+        SELECT nama_donatur, pesan, jumlah_donasi, tanggal_donasi
+        FROM donasi
+        WHERE id_program = %s
+        ORDER BY tanggal_donasi DESC
+        """
+        result = self.db.query(query, (id_program,))
+        return result if result else []
 
     def edit_program(self, idx, **kwargs):
         set_clause = ", ".join([f"{key} = %s" for key in kwargs])
@@ -921,12 +931,35 @@ def lihatProgram(program_manager):
         pilihan = menu_navigasi(header, options)
         if pilihan < len(programs):
             program_id = programs[pilihan][0]
+            program_nama = programs[pilihan][1]  
             program = program_manager.lihat_detail_program(program_id)
             if program:
                 print(f"Progress Donasi: {program.get_donasi_terkumpul()} / {program.get_target_donasi()}")
+                lanjut()
+                while True:
+                    pembersih()
+                    detail_header = f"Detail Program {program_nama}"  
+                    detail_options = ["Melihat Histori Donasi", "Kembali"]
+
+                    detail_pilihan = submenu_navigasi(detail_header, detail_options)
+                    if detail_pilihan == 0:
+                        histori_donasi = program_manager.lihat_histori_donasi(program_id)
+                        print("===== Histori Donasi =====")
+                        for donasi in histori_donasi:
+                            print("==================")
+                            print(f"Nama Dermawan : {donasi[0]}")
+                            print(f"Pesan Donasi  : {donasi[1]}")
+                            print(f"Jumlah Donasi : {donasi[2]}")
+                            print(f"Tanggal & Waktu Donasi: {donasi[3]}")
+                            print("==================")
+                        lanjut()
+                    else:
+                        break
             lanjut()
         else:
             break
+
+
 
 
 

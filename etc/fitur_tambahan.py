@@ -135,6 +135,19 @@ def menu_navigasi(header, options):
         elif key == readchar.key.ENTER:
             return selected_index
         
+def submenu_navigasi(header, options):
+    selected_index = 0
+    while True:
+        pembersih()
+        print_menu(header, options, selected_index)
+        key = readchar.readkey()
+        if key == readchar.key.UP:
+            selected_index = (selected_index - 1) % len(options)
+        elif key == readchar.key.DOWN:
+            selected_index = (selected_index + 1) % len(options)
+        elif key == readchar.key.ENTER:
+            return selected_index
+        
 def kalkulatorzakat():
     print("Selamat datang di Kalkulator Zakat")
     calculator = ZakatCalculator()
