@@ -514,7 +514,7 @@ def register():
     
 def forgot_account():
     while True:
-        menu = ['Forgot Username', 'Forgot Password', 'Forgot No Telepon', 'Kembali']
+        menu = ['• Forgot Username', '• Forgot Password', '• Forgot No Telepon', '• Kembali']
         header = "Pilih Metode Forgot Account :"
         selected_index = menu_navigasi(header, menu)
         if selected_index == 0:
@@ -575,7 +575,7 @@ def forgot_password():
         # print("1. by Username")
         # print("2. by No Telepon")
         # print("0. Kembali")
-        menu = ['Dengan Username', 'Dengan No Telepon','Kembali']
+        menu = ['• Dengan Username', '• Dengan No Telepon','• Kembali']
         header = "Pilih Metode Forgot Password :"
         pilih_metode = menu_navigasi(header, menu)
         if pilih_metode == 0:
@@ -671,7 +671,7 @@ def menuDonatur(donatur):
     
     while donatur.cek_login:
         header = f"Selamat datang Donatur {donatur.get_nama()}"
-        menu = ['Tentang Kami', 'Program Kami', 'Donasi', 'Donasi Mingguan', 'Adik Asuh', 'Pengaturan Akun','Logout']
+        menu = ['• Tentang Kami', '• Program Kami', '• Donasi', '• Donasi Mingguan', '• Adik Asuh', '• Pengaturan Akun','• Logout']
         pilihan = menu_navigasi(header, menu)
         if pilihan == 0 :
             TentangKami()
@@ -694,7 +694,7 @@ def menuDonatur(donatur):
 def DonasiMingguan():
     while True:
         header = "Halaman Donasi Mingguan"
-        menu = ['Donasi Mingguan', 'Kalkulator Zakat', 'Kembali']
+        menu = ['• Donasi Mingguan', '• Kalkulator Zakat', '• Kembali']
         pilihan = menu_navigasi(header,menu)
         if pilihan == 1:
             kalkulatorzakat()
@@ -835,7 +835,7 @@ def UserProgramKami():
 def donasiProgram(donatur):
     header = "Pilih Program untuk Donasi"
     programs = program_manager.lihat_program()
-    options = [nama for id, nama in programs] + ["Kembali"]
+    options = ["• "+nama for id, nama in programs] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
     if pilihan < len(programs):
         program_id = programs[pilihan][0]
@@ -865,7 +865,7 @@ def menuAdmin(admin):
         # print("0. Logout")
         # pilihan = input("Masukkan Pilihan")
         header = f"Selamat datang Admin {admin.get_nama()}"
-        menu = ['Manajemen Program Donasi', 'Manajemen Adik Asuh', 'Logout']
+        menu = ['• Manajemen Program Donasi', '• Manajemen Adik Asuh', '• Logout']
         pilihan = menu_navigasi(header, menu)
         # if not pilihan:
         #     print("Inputan tidak boleh kosong.")
@@ -892,7 +892,7 @@ def AdminManajemen_ProgramDonasi(program_manager):
         # print("4. Hapus Program Yayasan")
         # print("Untuk kembali ke menu sebelumnya \"kembali\" untuk menu utama \"menu\" ")
         header = "Halaman Manajemen Program Yayasan"
-        menu = ['Lihat Program Yayasan', 'Tambah Program Yayasan', 'Edit Program Yayasan', 'Hapus Program Yayasan', 'Kembali']
+        menu = ['• Lihat Program Yayasan', '• Tambah Program Yayasan', '• Edit Program Yayasan', '• Hapus Program Yayasan', '• Kembali']
         # pilihan = input("Masukkan Pilihan > ")
         pilihan = menu_navigasi(header,menu)
         # if not pilihan:
@@ -927,7 +927,7 @@ def lihatProgram(program_manager):
     while True:
         header = "Daftar Program Yayasan"
         programs = program_manager.lihat_program()
-        options = [nama for id, nama in programs] + ["Kembali"]
+        options = ["• " + nama for id, nama in programs] + ["• Kembali"]
         pilihan = menu_navigasi(header, options)
         if pilihan < len(programs):
             program_id = programs[pilihan][0]
@@ -939,7 +939,7 @@ def lihatProgram(program_manager):
                 while True:
                     pembersih()
                     detail_header = f"Detail Program {program_nama}"  
-                    detail_options = ["Melihat Histori Donasi", "Kembali"]
+                    detail_options = ["• Melihat Histori Donasi", "• Kembali"]
 
                     detail_pilihan = submenu_navigasi(detail_header, detail_options)
                     if detail_pilihan == 0:
@@ -986,7 +986,7 @@ def tambahProgram(program_manager):
 def editProgram(program_manager):
     header = "Pilih Program untuk Diedit"
     programs = program_manager.lihat_program()
-    options = [nama for id, nama in programs] + ["Kembali"]
+    options = ["• "+nama for id, nama in programs] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
     if pilihan < len(programs):
         idx = programs[pilihan][0]
@@ -1021,7 +1021,7 @@ def editProgram(program_manager):
 def hapusProgram(program_manager):
     header = "Pilih Program untuk Dihapus"
     programs = program_manager.lihat_program()
-    options = [nama for id, nama in programs] + ["Kembali"]
+    options = ["• "+nama for id, nama in programs] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
     if pilihan < len(programs):
         idx = programs[pilihan][0]
@@ -1049,7 +1049,7 @@ def hapusProgram(program_manager):
 def AdminManajemen_AdikAsuh(adik_asuh_manager):
     while True:
         header = "Halaman Manajemen Adik Asuh"
-        menu = ['Lihat Data Adik Asuh','Tambah Data Adik Asuh', 'Edit Data Adik Asuh', 'Hapus Data Adik Asuh', 'Kembali']
+        menu = ['• Lihat Data Adik Asuh','• Tambah Data Adik Asuh', '• Edit Data Adik Asuh', '• Hapus Data Adik Asuh', '• Kembali']
         pilihan = menu_navigasi(header,menu)
 
         if pilihan == 0:
@@ -1087,7 +1087,7 @@ def editAnakAsuh(adik_asuh_manager):
                                                                     Ubah Data Adik Asuh
 =====================================================================================================================================================================
 """
-    options = adik_asuh_manager.lihat_anak() + ["Kembali"]
+    options = "• "+adik_asuh_manager.lihat_anak() + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
     if pilihan < len(adik_asuh_manager.anak_asuh):
         idx = pilihan
@@ -1116,7 +1116,7 @@ def hapusAnakAsuh(adik_asuh_manager):
                                                                     Hapus Data Adik Asuh
 =====================================================================================================================================================================
 """
-    options = adik_asuh_manager.lihat_anak() + ["Kembali"]
+    options = "• "+adik_asuh_manager.lihat_anak() + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
     if pilihan < len(adik_asuh_manager.anak_asuh):
         idx = pilihan
@@ -1140,7 +1140,7 @@ def lihatAnakAsuh(adik_asuh_manager):
                                                                     Lihat Data Adik Asuh
 ====================================================================================================================================================================
 """
-        options = adik_asuh_manager.lihat_anak() + ["Kembali"]
+        options = "• "+adik_asuh_manager.lihat_anak() + ["• Kembali"]
         pilihan = menu_navigasi(header, options)
         if pilihan < len(adik_asuh_manager.anak_asuh):
             adik_asuh_manager.lihat_detail_anak(pilihan)
@@ -1153,5 +1153,4 @@ menuLogin()
 
 
 # Checkpoint Sementara :
-# Lanjutkan masalah adik asuh, setelah itu ubah program yayasan dan adik asuh menggunakan mysql atau database.
-# SLEEEPPPPPPPPPPP DULU
+# Mengubah adik asuh ke database.
