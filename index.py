@@ -97,25 +97,44 @@ class User():
 
 
 class Donatur(User):
-    def __init__(self,user_id, nama, username, password, notelp, email):
-        super().__init__(user_id,username, password)
+    def __init__(self, user_id, nama, username, password, notelp, email, dompet=0):
+        super().__init__(user_id, username, password)
         self.__notelp = notelp
         self.__nama = nama
         self.__email = email
+        self.__dompet = dompet
+        self.__password = password
         self.cek_login = True
         
     def get_notelp(self):
         return self.__notelp
+    
     def get_nama(self):
         return self.__nama
+    
     def get_email(self):
         return self.__email
     
-    def set_email(self):
-        self.__email = self.__email
+    def get_dompet(self):
+        return self.__dompet
+    
+    def get_password(self):
+        return self.__password
+    
+    def set_dompet(self, dompet):
+        self.__dompet = dompet
+    
+    def set_email(self, email):
+        self.__email = email
+
+    def set_password(self, password):
+        self.__password = password
 
     def logout(self):
         self.cek_login = False
+
+    def cek_dompet(self):
+        print(f"Saldo dompet Anda adalah: {self.__dompet}.")
 
 
 
@@ -426,7 +445,7 @@ def login():
             tipe_kredensial = "username"
         
         try:
-            kueri = db.query(f"SELECT id_akun, nama, username, password, role, notelp, email FROM akun WHERE {tipe_kredensial} = '{credential}' AND password = '{password}'")
+            kueri = db.query(f"SELECT id_akun, nama, username, password, role, notelp, email, dompet FROM akun WHERE {tipe_kredensial} = '{credential}' AND password = '{password}'")
             if not kueri:
                 print(f"{tipe_kredensial} atau password yang dimasukkan salah.")
                 lanjut()
@@ -434,10 +453,10 @@ def login():
             else:
                 role = kueri[0][4]
                 if role == "Donatur":
-                    donatur = Donatur(kueri[0][0],kueri[0][1], kueri[0][2], password, kueri[0][5], kueri[0][6])
+                    donatur = Donatur(kueri[0][0], kueri[0][1], kueri[0][2], password, kueri[0][5], kueri[0][6], kueri[0][7])
                     menuDonatur(donatur)
                 elif role == "Admin":
-                    admin = Admin(kueri[0][0],kueri[0][1], kueri[0][2], password)
+                    admin = Admin(kueri[0][0], kueri[0][1], kueri[0][2], password)
                     menuAdmin(admin)
                 else:
                     print("Role tidak valid.")
@@ -448,6 +467,7 @@ def login():
 
     if percobaan == maks:
         print("Anda telah melebihi batas percobaan login. Silakan coba lagi nanti.")
+
 
 
 
@@ -491,7 +511,7 @@ def register():
             if validasi_email(email):
                 percobaan_email = False
             else:
-                pass               
+                print("Email tidak valid. Coba masukkan kembali.") 
 
         cek_email = db.query(f"SELECT * FROM akun WHERE email = '{email}'")
         if cek_email:
@@ -499,16 +519,15 @@ def register():
             lanjut()
             continue
 
-
         try:
-            donatur = Donatur(nama, username, password, notelp, email)
-            db.query(f"INSERT INTO akun(nama, username, password, notelp, role, email) VALUES ('{donatur.get_nama()}','{donatur.get_username()}', '{donatur.get_password()}', '{donatur.get_notelp()}', 'Donatur', '{donatur.get_email()}')")
+            donatur = Donatur(None, nama, username, password, notelp, email, 0)
+            db.query(f"INSERT INTO akun(nama, username, password, notelp, role, email, dompet) VALUES ('{donatur.get_nama()}','{donatur.get_username()}', '{donatur.get_password()}', '{donatur.get_notelp()}', 'Donatur', '{donatur.get_email()}', {donatur.get_dompet()})")
             print("Berhasil Daftar...")
             lanjut()
             break  
         except Exception as e:
             print(f"Terjadi kesalahan saat melakukan register: {e}")
-
+            lanjut()
 
     
     
@@ -671,7 +690,7 @@ def menuDonatur(donatur):
     
     while donatur.cek_login:
         header = f"Selamat datang Donatur {donatur.get_nama()}"
-        menu = ['• Tentang Kami', '• Program Kami', '• Donasi', '• Donasi Mingguan', '• Adik Asuh', '• Pengaturan Akun','• Logout']
+        menu = ['• Tentang Kami', '• Program Kami', '• Donasi', '• Donasi Mingguan', '• Adik Asuh', '• Dompet', '• Pengaturan Akun','• Logout']
         pilihan = menu_navigasi(header, menu)
         if pilihan == 0 :
             TentangKami()
@@ -684,8 +703,11 @@ def menuDonatur(donatur):
         elif pilihan == 4 :
             pass
         elif pilihan == 5 :
-            pass
+            menuDompet(donatur)
+            lanjut()
         elif pilihan == 6 :
+            pass
+        elif pilihan == 7 :
             donatur.logout()
         else:
             pass
@@ -852,7 +874,29 @@ def donasiProgram(donatur):
     else:
         pass
 
-       
+
+def menuDompet(donatur):
+    while True:
+        header = f"Dompet {donatur.get_nama()}"
+        menu = ["Cek Dompet", "Top Up Dompet", "Kembali"]
+        pilihan = menu_navigasi(header, menu)
+        if pilihan == 0:
+            cekDompet(donatur)
+        elif pilihan == 1 :
+            sistemTopUp()
+        elif pilihan == 2:
+            break
+
+def cekDompet(donatur):
+    # pembersih()
+    print(f"Dompet anda : {donatur.get_dompet()}")
+    lanjut()
+
+def sistemTopUp():
+    print("Belum ada.")
+    lanjut()
+
+        
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ ADMIN STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 

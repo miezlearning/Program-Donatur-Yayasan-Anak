@@ -68,13 +68,13 @@ def send_email(receiver_email, code):
     msg['Subject'] = subject
     
     body = f'''
-    Hi there,
+    Hai Donatur,
     
-    Here is your top-up code: {code}
-    Please use it to complete the top-up process within 2 minutes.
+    Berikut Kode Top-Up: {code}
+    Tolong segera mengisi kode tersebut dengan batas 2 menit.
     
-    Regards,
-    Your App Team
+    Salam,
+    Yayasan Anak Budi Pekerti
     '''
     
     msg.attach(MIMEText(body, 'plain'))
@@ -93,10 +93,10 @@ def top_up(amount):
     elapsed_time = 0
     
     while elapsed_time < 120:
-        entered_code = input('Enter the code received via email: ')
+        entered_code = input('Masukkan Kode (Cek Email): ')
         
         if entered_code == code:
-            print(f'Top-up successful! Amount: {amount}')
+            print(f'Top-up berhasil! Total Topup: {amount}')
             break
         
         elapsed_time = time.time() - start_time

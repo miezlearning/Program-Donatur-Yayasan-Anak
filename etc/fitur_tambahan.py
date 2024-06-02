@@ -7,6 +7,8 @@ from email.mime.image import MIMEImage
 from etc.kalkulator_zakat import ZakatCalculator
 import os
 import readchar
+import getpass
+import sys
 
 class warna:
     ungu = "\033[95m"
@@ -77,8 +79,11 @@ def lanjut():
     print("\n")
     garis()
     print("Press ENTER untuk melanjutkan...")
+    # test = getpass.getpass(stream=None)
     garis()
-    input()
+    # input()
+    test = getpass.getpass(prompt="\033[0m",stream=None)
+    # sys.stdout.write("\033[F")
 
 def pembersih():
     os_name = os.name
