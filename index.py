@@ -9,7 +9,7 @@ from mysql.connector import Error
 # Modul Password Char
 from pwinput import pwinput as enkripsi_password
 # Modul Fitur Tambahan
-from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih, lanjut, org_chart, menu_navigasi, kalkulatorzakat, submenu_navigasi
+from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih, lanjut, org_chart, menu_navigasi, kalkulatorzakat, submenu_navigasi, top_up
 
 
 # Modul GUI
@@ -893,7 +893,17 @@ def cekDompet(donatur):
     lanjut()
 
 def sistemTopUp():
-    print("Belum ada.")
+    topupamount = input("Masukkan jumlah pengisian dompet: ")
+    if topupamount == "":
+        print("Jumlah pengisian tidak boleh kosong.")
+        lanjut()
+        return
+    topupamount = int(topupamount)
+    tambahandompet = top_up(topupamount)
+    #                ^ belum pake email user
+    # contoh top_up(amount, receiver_email)
+    # ambil jumlah dompet dari database dan tambahkan dengan tambahandompet
+    # lalu simpan lagi di database
     lanjut()
 
         

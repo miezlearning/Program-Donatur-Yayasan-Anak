@@ -57,7 +57,7 @@ def generate_random_code():
     code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
     return code
 
-def send_email(receiver_email, code):
+def send_topup_code(receiver_email, code):
     sender_email = 'trynore2342@gmail.com'
     app_password = 'osqo ddwe eiyw zlcj'
     subject = 'Top-up Code'
@@ -84,10 +84,13 @@ def send_email(receiver_email, code):
         server.send_message(msg)
 
 def top_up(amount):
+    if amount <= 5000:
+        print('Pengisian tidak bisa kurang dari Rp. 5.000')
+        return
     code = generate_random_code()
     
     receiver_email = 'm.alif7890@gmail.com'
-    send_email(receiver_email, code)
+    send_topup_code(receiver_email, code)
     
     start_time = time.time()
     elapsed_time = 0
@@ -107,9 +110,9 @@ def top_up(amount):
             code = generate_random_code()
             start_time = time.time()
             elapsed_time = 0
-            send_email(receiver_email, code)
-            print('Code expired. New code has been sent.')
+            send_topup_code(receiver_email, code)
+            print('Masa berlaku kode habis. Kode baru telah di kirim.')
         else:
-            print(f'Invalid code. Remaining time: {int(remaining_time)} seconds.')
+            print(f'Kode salah. Sisa waktu pemasukan kode: {int(remaining_time)} Detik.')
 # Usage example
 top_up(100)
