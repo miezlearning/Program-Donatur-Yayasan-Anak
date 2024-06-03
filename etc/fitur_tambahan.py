@@ -1,10 +1,14 @@
 import re
 # import yagmail as email
 import smtplib
+import random
+import string
+import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from etc.kalkulator_zakat import ZakatCalculator
+# from etc.topup import send_topup_code, top_up, generate_random_code
 import os
 import readchar
 import getpass
@@ -167,3 +171,95 @@ def kalkulatorzakat():
     print("\n-- Total Zakat --")
     calculator.hitung_total_zakat()
     return
+
+def send_topup_code(receiver_email, code):
+    sender_email = 'trynore2342@gmail.com'
+    app_password = 'osqo ddwe eiyw zlcj'
+    subject = 'Top-up Code'
+    
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = subject
+    
+    body = f'''
+    Hai Donatur,
+    
+    Berikut Kode Top-Up: {code}
+    Tolong segera mengisi kode tersebut dengan batas 2 menit.
+    
+    Salam,
+    Yayasan Anak Budi Pekerti
+    '''
+    
+    msg.attach(MIMEText(body, 'plain'))
+    
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        server.login(sender_email, app_password)
+        server.send_message(msg)
+
+def generate_random_code():
+    # Generate a random code consisting of uppercase letters and digits
+    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return code
+
+def send_topup_code(receiver_email, code):
+    sender_email = 'trynore2342@gmail.com'
+    app_password = 'osqo ddwe eiyw zlcj'
+    subject = 'Top-up Code'
+    
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = subject
+    
+    body = f'''
+    Hai Donatur,
+    
+    Berikut Kode Top-Up: {code}
+    Tolong segera mengisi kode tersebut dengan batas 2 menit.
+    
+    Salam,
+    Yayasan Anak Budi Pekerti
+    '''
+    
+    msg.attach(MIMEText(body, 'plain'))
+    
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        server.login(sender_email, app_password)
+        server.send_message(msg)
+
+def top_up(amount): # <-- tambah parameter receiver_email
+    if amount <= 5000:
+        print("Jumlah pengisian hanya bisa lebih dari Rp. 5.000")
+        return
+    code = generate_random_code()
+    
+    # email masih default pengetesan
+    receiver_email = 'm.alif7890@gmail.com'
+    # receiver_email = 'kevinrafif33@gmail.com'
+    #                   ^ jangan lupa di ganti untuk ambil email user(dari database atau global variabel)
+    send_topup_code(receiver_email, code)
+    
+    start_time = time.time()
+    elapsed_time = 0
+    
+    while elapsed_time < 120:
+        entered_code = input('Masukkan Kode (Cek Email): ')
+        
+        if entered_code == code:
+            print(f'Top-up berhasil! Total Topup: {amount}')
+            break
+        
+        elapsed_time = time.time() - start_time
+        remaining_time = 120 - elapsed_time
+        
+        if remaining_time <= 0:
+            # Code expired, generate a new code
+            code = generate_random_code()
+            start_time = time.time()
+            elapsed_time = 0
+            send_topup_code(receiver_email, code)
+            print('Masa berlaku kode habis. Kode baru telah di kirim.')
+        else:
+            print(f'Kode salah. Sisa waktu pemasukan kode: {int(remaining_time)} Detik.')
