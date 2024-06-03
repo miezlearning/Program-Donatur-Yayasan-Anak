@@ -94,14 +94,21 @@ class Donatur(User):
 
 
 class Admin(User):
-    def __init__(self,user_id, nama, username, password):
-        super().__init__(user_id,username, password)
+    def __init__(self, user_id, nama, username, password, dompet=0):
+        super().__init__(user_id, username, password)
         self.__nama = nama
+        self.__dompet = dompet
         self.cek_login = True
     
     def get_nama(self):
         return self.__nama
     
+    def get_dompet(self):
+        return self.__dompet
+    
+    def set_dompet(self, dompet):
+        self.__dompet = dompet
+
     def logout(self):
         self.cek_login = False
 
@@ -412,7 +419,7 @@ def login():
                     donatur = Donatur(kueri[0][0], kueri[0][1], kueri[0][2], password, kueri[0][5], kueri[0][6], kueri[0][7])
                     menuDonatur(donatur)
                 elif role == "Admin":
-                    admin = Admin(kueri[0][0], kueri[0][1], kueri[0][2], password)
+                    admin = Admin(kueri[0][0], kueri[0][1], kueri[0][2], password, kueri[0][7])
                     menuAdmin(admin)
                 else:
                     print("Role tidak valid.")
@@ -811,53 +818,68 @@ def UserProgramKami():
 
 
 def donasiProgram(donatur):
-    header = "Pilih Program untuk Donasi"
-    programs = program_manager.lihat_program()
-    options = ["• " + nama for id, nama in programs] + ["• Kembali"]
-    pilihan = menu_navigasi(header, options)
-    if pilihan < len(programs):
-        program_id = programs[pilihan][0]
-        program = program_manager.lihat_detail_program(program_id)
-        if program:
-            if program.cek_terpenuhi_program():
-                print("Target donasi untuk program ini sudah terpenuhi. Anda tidak bisa melakukan donasi lagi.")
-                lanjut()
-                donasiProgram(donatur)
-
-            while True:
-                try:
-                    while True:
-                        print("Jika ingin kembali ketik \"0\"")
-                        jumlah_donasi = int(input("Masukkan jumlah donasi: "))
-
-                        if jumlah_donasi == 0:
-                            donasiProgram(donatur)
-                        elif jumlah_donasi < 500:
-                            pembersih()
-                            print("Jumlah donasi kamu tidak valid. Minimal melakukan donasi 500 Rupiah")
-                        else:
-                            break
-
-                    if donatur.get_dompet() < jumlah_donasi:
-                        print("Saldo dompet Anda tidak mencukupi untuk donasi ini.")
+    # header = "Pilih Program untuk Donasi"
+    # programs = program_manager.lihat_program()
+    # options = ["• " + nama for id, nama in programs] + ["• Kembali"]
+    # pilihan = menu_navigasi(header, options)
+    # if pilihan < len(programs):
+    #     program_id = programs[pilihan][0]
+    #     program = program_manager.lihat_detail_program(program_id)
+    #     if program:
+    #         if program.cek_terpenuhi_program():
+    #             print("Target donasi untuk program ini sudah terpenuhi. Anda tidak bisa melakukan donasi lagi.")
+    #             lanjut()
+    #             donasiProgram(donatur)
+    while True:
+            header = "Pilih Program untuk Donasi"
+            programs = program_manager.lihat_program()
+            options = ["• " + nama for id, nama in programs] + ["• Kembali"]
+            pilihan = menu_navigasi(header, options)
+            
+            if pilihan == len(programs):
+                return
+            
+            if pilihan < len(programs):
+                program_id = programs[pilihan][0]
+                program = program_manager.lihat_detail_program(program_id)
+                if program:
+                    if program.cek_terpenuhi_program():
+                        print("Target donasi untuk program ini sudah terpenuhi. Anda tidak bisa melakukan donasi lagi.")
                         lanjut()
-                        return
+                        continue
 
-                    pesan_donasi = input("Masukkan pesan untuk donasi: ")
-                    nama_donatur = donatur.get_nama()
-                    program_manager.update_donasi_terkumpul(program_id, jumlah_donasi)
-                    program_manager.catat_donasi(donatur.get_id(), program_id, jumlah_donasi, nama_donatur, pesan_donasi)
-                    program.tambah_donasi(jumlah_donasi)
-                    
-                    donatur.kurangi_dompet(jumlah_donasi)
-                    update_dompet(donatur.get_id(), -jumlah_donasi)
-                    db.tutup_koneksi()
-                    print("Donasi anda berhasil terkirim!.")
-                    lanjut()
-                    break
-                except ValueError:
-                    pembersih()
-                    print("Inputan tidak valid.")
+                    while True:
+                        try:
+                            print("Jika ingin kembali ketik \"0\"")
+                            jumlah_donasi = int(input("Masukkan jumlah donasi: "))
+
+                            if jumlah_donasi == 0:
+                                # Kembali ke menu program donasi
+                                break
+                            elif jumlah_donasi <= 500:
+                                pembersih()
+                                print("Jumlah donasi kamu tidak valid. Minimal melakukan donasi 500 Rupiah")
+                            else:
+                                if donatur.get_dompet() < jumlah_donasi:
+                                    print("Saldo dompet Anda tidak mencukupi untuk donasi ini.")
+                                    lanjut()
+                                    break
+
+                                pesan_donasi = input("Masukkan pesan untuk donasi: ")
+                                nama_donatur = donatur.get_nama()
+                                program_manager.update_donasi_terkumpul(program_id, jumlah_donasi)
+                                program_manager.catat_donasi(donatur.get_id(), program_id, jumlah_donasi, nama_donatur, pesan_donasi)
+                                program.tambah_donasi(jumlah_donasi)
+                                
+                                donatur.kurangi_dompet(jumlah_donasi)
+                                update_dompet(donatur.get_id(), -jumlah_donasi)
+                                db.tutup_koneksi()
+                                print("Donasi anda berhasil terkirim!.")
+                                lanjut()
+                                break
+                        except ValueError:
+                            pembersih()
+                            print("Inputan tidak valid.")
 
 
 def update_dompet(user_id, amount):
@@ -914,7 +936,7 @@ def menuAdmin(admin):
         # print("0. Logout")
         # pilihan = input("Masukkan Pilihan")
         header = f"Selamat datang Admin {admin.get_nama()}"
-        menu = ['• Manajemen Program Donasi', '• Manajemen Adik Asuh', '• Logout']
+        menu = ['• Manajemen Program Donasi', '• Manajemen Adik Asuh', '• Cek Rekening', '• Logout']
         pilihan = menu_navigasi(header, menu)
         # if not pilihan:
         #     print("Inputan tidak boleh kosong.")
@@ -924,15 +946,23 @@ def menuAdmin(admin):
         #     continue
 
         if pilihan == 0:
-            AdminManajemen_ProgramDonasi(program_manager)
+            AdminManajemen_ProgramDonasi(admin, program_manager)
         elif pilihan == 1:
             AdminManajemen_AdikAsuh(adik_asuh_manager)
         elif pilihan == 2:
+            Admin_CekRekening(admin)
+        elif pilihan == 3:
             admin.logout()
         else:
             print("Pilihan tidak valid.")
 
-def AdminManajemen_ProgramDonasi(program_manager):
+def Admin_CekRekening(admin):
+    print(f"Rekening anda : {admin.get_dompet()}")
+    lanjut()
+
+
+
+def AdminManajemen_ProgramDonasi(admin, program_manager):
     while True:
         # print("Halaman Manajemen Program Yayasan")
         # print("1. Lihat Program Yayasan")
@@ -955,7 +985,7 @@ def AdminManajemen_ProgramDonasi(program_manager):
         elif pilihan == 2:
             editProgram(program_manager)
         elif pilihan == 3:
-            hapusProgram(program_manager)
+            hapusProgram(admin, program_manager)
         elif pilihan == 4:
             break
 
@@ -1012,6 +1042,7 @@ def lihatProgram(program_manager):
 
 
 
+
 def tambahProgram(program_manager):
     nama = input("Nama Program: ")
     deskripsi = input("Deskripsi Program: ")
@@ -1022,7 +1053,9 @@ def tambahProgram(program_manager):
         try:
             if not tenggat:
                 raise ValueError("Tenggat tidak boleh kosong.")
-            datetime.datetime.strptime(tenggat, '%Y-%m-%d')
+            tenggat_date = datetime.datetime.strptime(tenggat, '%Y-%m-%d')
+            if tenggat_date.date() < datetime.datetime.now().date():
+                raise ValueError("Tanggal tidak boleh kurang dari tanggal sekarang.")
             break
         except ValueError as e:
             print("Error:", e)
@@ -1032,26 +1065,30 @@ def tambahProgram(program_manager):
     lanjut()
 
 
+
 def editProgram(program_manager):
     header = "Pilih Program untuk Diedit"
     programs = program_manager.lihat_program()
-    options = ["• "+nama for id, nama in programs] + ["• Kembali"]
+    options = ["• " + nama for id, nama in programs] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
     if pilihan < len(programs):
         idx = programs[pilihan][0]
         nama = input("Nama Program (biarkan kosong jika tidak ingin mengubah): ")
         deskripsi = input("Deskripsi Program (biarkan kosong jika tidak ingin mengubah): ")
         target_donasi = input("Target Donasi (biarkan kosong jika tidak ingin mengubah): ")
-        donasi_terkumpul = input("Donasi Terkumpul (biarkan kosong jika tidak ingin mengubah): ")
         while True:
             tenggat = input("Tenggat Selesai Pengumpulan Dana (biarkan kosong jika tidak ingin mengubah): ")
-            try:
-                if not tenggat:
-                    raise ValueError("Tenggat tidak boleh kosong.")
-                datetime.datetime.strptime(tenggat, '%Y-%m-%d')
+            if tenggat:
+                try:
+                    tenggat_date = datetime.datetime.strptime(tenggat, '%Y-%m-%d')
+                    if tenggat_date.date() < datetime.datetime.now().date():
+                        raise ValueError("Tanggal tidak boleh kurang dari tanggal sekarang.")
+                    break
+                except ValueError as e:
+                    print("Error:", e)
+            else:
                 break
-            except ValueError as e:
-                print("Error:", e)
+
         kwargs = {}
         if nama:
             kwargs['nama'] = nama
@@ -1059,24 +1096,37 @@ def editProgram(program_manager):
             kwargs['deskripsi'] = deskripsi
         if target_donasi:
             kwargs['target_donasi'] = float(target_donasi)
-        if donasi_terkumpul:
-            kwargs['donasi_terkumpul'] = float(donasi_terkumpul)
         if tenggat:
             kwargs['tenggat'] = tenggat
         program_manager.edit_program(idx, **kwargs)
         print("Program berhasil diedit.")
         lanjut()
 
-def hapusProgram(program_manager):
+def hapusProgram(admin, program_manager):
     header = "Pilih Program untuk Dihapus"
     programs = program_manager.lihat_program()
-    options = ["• "+nama for id, nama in programs] + ["• Kembali"]
+    options = ["• " + nama for id, nama in programs] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
     if pilihan < len(programs):
         idx = programs[pilihan][0]
-        program_manager.hapus_program(idx)
-        lanjut()
-
+        program = program_manager.lihat_detail_program(idx)
+        if program:
+            if not program.cek_terpenuhi_program():
+                konfirmasi = input("Target donasi belum terpenuhi. Apakah Anda yakin ingin menghapus program ini? (y/n): ")
+                if konfirmasi.lower() != 'y':
+                    return
+            dompetadmin = admin.get_dompet() + program.get_donasi_terkumpul()
+            admin.set_dompet(dompetadmin)
+            # admin.set_dompet(admin.get_dompet() + program.get_donasi_terkumpul())
+            
+            try:
+                db.query(f"UPDATE akun SET dompet = {dompetadmin} WHERE username = '{admin.get_username()}'")
+                db.query(f"DELETE FROM donasi WHERE id_program = '{idx}'")
+                program_manager.hapus_program(idx)
+                print(f"Program {program.get_nama()} berhasil dihapus dan donasi terkumpul sebesar {program.get_donasi_terkumpul()} telah ditambahkan ke dompet admin.")
+            except Exception as e:
+                print(f"Terjadi kesalahan saat menghapus program: {e}")
+            lanjut()
 # def hapusProgram(program_manager):
 #     program_manager.lihat_program()
 #     idx = int(input("Pilih nomor program yang akan dihapus: ")) - 1
