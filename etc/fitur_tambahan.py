@@ -12,7 +12,63 @@ from etc.kalkulator_zakat import ZakatCalculator
 import os
 import readchar
 import getpass
-import sys
+# Modul Koneksi Database 
+import mysql.connector
+from mysql.connector import Error
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━ DATABASE STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
+
+class Database:
+    def __init__(self):
+        self.connection = self.koneksi()
+
+    def koneksi(self):
+        try:
+            mydb = mysql.connector.connect(
+                host="localhost",
+                user="root",
+                password="",
+                database="pbotest"
+            )
+            if mydb.is_connected():
+                print("Berhasil Koneksi ke Database")
+                return mydb
+            else:
+                print("Koneksi Gagal")
+                return None
+        except Error as e:
+            print(f"Terjadi kesalahan saat menghubungkan ke database: {e}")
+            return None
+
+    def query(self, query, params=None):
+        if not self.connection or not self.connection.is_connected():
+            self.connection = self.koneksi()
+        if self.connection:
+            try:
+                CMD = self.connection.cursor()
+                CMD.execute(query, params)
+                result = CMD.fetchall()
+                self.connection.commit()
+                return result
+            except Error as e:
+                print(f"Terjadi kesalahan saat menjalankan query: {e}")
+                self.connection.rollback()
+                return None
+        else:
+            print("Tidak dapat membuat koneksi ke database untuk menjalankan query.")
+            return None
+
+    def tutup_koneksi(self):
+        if self.connection and self.connection.is_connected():
+            try:
+                self.connection.close()
+            except Exception as e:
+                print(f"Terjadi kesalahan saat menutup koneksi ke database: {e}")
+
+
+
+db = Database()
 
 class warna:
     ungu = "\033[95m"
@@ -172,94 +228,74 @@ def kalkulatorzakat():
     calculator.hitung_total_zakat()
     return
 
-def send_topup_code(receiver_email, code):
-    sender_email = 'trynore2342@gmail.com'
-    app_password = 'osqo ddwe eiyw zlcj'
-    subject = 'Top-up Code'
-    
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = receiver_email
-    msg['Subject'] = subject
-    
-    body = f'''
-    Hai Donatur,
-    
-    Berikut Kode Top-Up: {code}
-    Tolong segera mengisi kode tersebut dengan batas 2 menit.
-    
-    Salam,
-    Yayasan Anak Budi Pekerti
-    '''
-    
-    msg.attach(MIMEText(body, 'plain'))
-    
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-        server.login(sender_email, app_password)
-        server.send_message(msg)
+
+
+
 
 def generate_random_code():
-    # Generate a random code consisting of uppercase letters and digits
     code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
     return code
 
+def top_up(amount, donatur):
+    if amount <= 5000:
+        print("Jumlah pengisian hanya bisa lebih dari Rp. 5.000")
+        return
+
+    code = generate_random_code()
+    send_topup_code(donatur.get_email(), code)
+
+    start_time = time.time()
+    elapsed_time = 0
+
+    while elapsed_time < 120:
+        entered_code = input('Masukkan Kode (Cek Email): ')
+        print("Tunggu sebentar...")
+
+        if entered_code == code:
+            print(f'Top-up berhasil! Total Topup: {amount}')
+            query = "UPDATE akun SET dompet = dompet + %s WHERE id_akun = %s"
+            params = (amount, donatur.get_id())
+            db.query(query, params)
+            db.tutup_koneksi()
+            donatur.set_dompet(donatur.get_dompet() + amount)
+            break
+
+        elapsed_time = time.time() - start_time
+        remaining_time = 120 - elapsed_time
+
+        if remaining_time <= 0:
+            code = generate_random_code()
+            start_time = time.time()
+            elapsed_time = 0
+            send_topup_code(donatur.get_email(), code)
+            print('Masa berlaku kode habis. Kode baru telah di kirim.')
+        else:
+            print(f'Kode salah. Sisa waktu pemasukan kode: {int(remaining_time)} Detik.')
+
 def send_topup_code(receiver_email, code):
     sender_email = 'trynore2342@gmail.com'
     app_password = 'osqo ddwe eiyw zlcj'
     subject = 'Top-up Code'
-    
+
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = receiver_email
     msg['Subject'] = subject
-    
+
     body = f'''
     Hai Donatur,
-    
+
     Berikut Kode Top-Up: {code}
     Tolong segera mengisi kode tersebut dengan batas 2 menit.
-    
+
     Salam,
     Yayasan Anak Budi Pekerti
     '''
-    
+
     msg.attach(MIMEText(body, 'plain'))
-    
+
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
         server.login(sender_email, app_password)
         server.send_message(msg)
 
-def top_up(amount): # <-- tambah parameter receiver_email
-    if amount <= 5000:
-        print("Jumlah pengisian hanya bisa lebih dari Rp. 5.000")
-        return
-    code = generate_random_code()
-    
-    # email masih default pengetesan
-    receiver_email = 'm.alif7890@gmail.com'
-    # receiver_email = 'kevinrafif33@gmail.com'
-    #                   ^ jangan lupa di ganti untuk ambil email user(dari database atau global variabel)
-    send_topup_code(receiver_email, code)
-    
-    start_time = time.time()
-    elapsed_time = 0
-    
-    while elapsed_time < 120:
-        entered_code = input('Masukkan Kode (Cek Email): ')
-        
-        if entered_code == code:
-            print(f'Top-up berhasil! Total Topup: {amount}')
-            break
-        
-        elapsed_time = time.time() - start_time
-        remaining_time = 120 - elapsed_time
-        
-        if remaining_time <= 0:
-            # Code expired, generate a new code
-            code = generate_random_code()
-            start_time = time.time()
-            elapsed_time = 0
-            send_topup_code(receiver_email, code)
-            print('Masa berlaku kode habis. Kode baru telah di kirim.')
-        else:
-            print(f'Kode salah. Sisa waktu pemasukan kode: {int(remaining_time)} Detik.')
+

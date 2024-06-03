@@ -2,15 +2,13 @@
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ IMPORT MODULE ━━━━━━━━━━━━━━━━━━━━━━━━ 
-# Modul Koneksi Database 
-import datetime
-import mysql.connector
-from mysql.connector import Error
+
 # Modul Password Char
+import datetime
 from pwinput import pwinput as enkripsi_password
 # Modul Fitur Tambahan
 from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih, lanjut, org_chart, menu_navigasi, kalkulatorzakat, submenu_navigasi, top_up
-
+from etc.fitur_tambahan import Database
 
 # Modul GUI
 import tkinter as tk
@@ -20,55 +18,7 @@ from tkinter import messagebox
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━ DATABASE STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
 
-class Database:
-    def __init__(self):
-        self.connection = self.koneksi()
-
-    def koneksi(self):
-        try:
-            mydb = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="",
-                database="pbotest"
-            )
-            if mydb.is_connected():
-                print("Berhasil Koneksi ke Database")
-                return mydb
-            else:
-                print("Koneksi Gagal")
-                return None
-        except Error as e:
-            print(f"Terjadi kesalahan saat menghubungkan ke database: {e}")
-            return None
-
-    def query(self, query, params=None):
-        if self.connection:
-            try:
-                CMD = self.connection.cursor()
-                CMD.execute(query, params)
-                result = CMD.fetchall()
-                self.connection.commit()
-                return result
-            except Error as e:
-                print(f"Terjadi kesalahan saat menjalankan query: {e}")
-                self.connection.rollback()
-                return None
-        else:
-            print("Tidak dapat membuat koneksi ke database untuk menjalankan query.")
-            return None
-
-    def tutup_koneksi(self):
-        if self.connection.is_connected():
-            try:
-                CMD = self.connection.cursor()
-                CMD.fetchall()  # Membersihkan hasil dari query sebelum menutup koneksi
-                self.connection.close()
-                print("Koneksi ke database ditutup")
-            except Exception as e:
-                print(f"Terjadi kesalahan saat menutup koneksi ke database: {e}")
 
 
 # <> Inisialisasi Modul database.
@@ -105,6 +55,8 @@ class Donatur(User):
         self.__dompet = dompet
         self.__password = password
         self.cek_login = True
+
+
         
     def get_notelp(self):
         return self.__notelp
@@ -135,6 +87,9 @@ class Donatur(User):
 
     def cek_dompet(self):
         print(f"Saldo dompet Anda adalah: {self.__dompet}.")
+    
+    def kurangi_dompet(self, nominal_kurang):
+        self.__dompet = self.__dompet - nominal_kurang
 
 
 
@@ -160,6 +115,7 @@ class Program:
         self._deskripsi = deskripsi
         self._target_donasi = target_donasi
         self._donasi_terkumpul = donasi_terkumpul
+
         self._tenggat = tenggat
 
     # Getters
@@ -180,6 +136,9 @@ class Program:
     
     def tambah_donasi(self, jumlah):
         self._donasi_terkumpul += jumlah
+
+    def cek_terpenuhi_program(self):
+        return self._donasi_terkumpul >= self._target_donasi
 
     def __str__(self):
         return (f"Nama Program: {self._nama}\n"
@@ -231,9 +190,7 @@ class ProgramManager:
         query = "UPDATE programs SET donasi_terkumpul = donasi_terkumpul + %s WHERE id_program = %s"
         result = self.db.query(query, (jumlah, program_id))
         if result is not None:
-            print("Donasi berhasil diperbarui.")
-        else:
-            print("Gagal memperbarui donasi.")
+            pass
 
     def catat_donasi(self, id_akun, id_program, jumlah, nama_donatur, pesan):
         query = """
@@ -243,9 +200,8 @@ class ProgramManager:
         params = (id_akun, id_program, jumlah, nama_donatur, pesan)
         result = self.db.query(query, params)
         if result is not None:
-            print("Donasi berhasil dicatat.")
-        else:
-            print("Gagal mencatat donasi.")
+            pass
+ 
     
     def lihat_histori_donasi(self, id_program):
         query = """
@@ -857,23 +813,57 @@ def UserProgramKami():
 def donasiProgram(donatur):
     header = "Pilih Program untuk Donasi"
     programs = program_manager.lihat_program()
-    options = ["• "+nama for id, nama in programs] + ["• Kembali"]
+    options = ["• " + nama for id, nama in programs] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
     if pilihan < len(programs):
         program_id = programs[pilihan][0]
         program = program_manager.lihat_detail_program(program_id)
         if program:
-            jumlah_donasi = int(input("Masukkan jumlah donasi: "))
-            pesan_donasi = input("Masukkan pesan untuk donasi: ")
-            nama_donatur = donatur.get_nama()
-            program_manager.update_donasi_terkumpul(program_id, jumlah_donasi)
-            program_manager.catat_donasi(donatur.get_id(), program_id, jumlah_donasi, nama_donatur, pesan_donasi)
-            program.tambah_donasi(jumlah_donasi)
-            print(f"Terima kasih atas donasi Anda! Donasi terkumpul: {program.get_donasi_terkumpul()} / {program.get_target_donasi()}")
-        lanjut()
-    else:
-        pass
+            if program.cek_terpenuhi_program():
+                print("Target donasi untuk program ini sudah terpenuhi. Anda tidak bisa melakukan donasi lagi.")
+                lanjut()
+                donasiProgram(donatur)
 
+            while True:
+                try:
+                    while True:
+                        print("Jika ingin kembali ketik \"0\"")
+                        jumlah_donasi = int(input("Masukkan jumlah donasi: "))
+
+                        if jumlah_donasi == 0:
+                            donasiProgram(donatur)
+                        elif jumlah_donasi < 500:
+                            pembersih()
+                            print("Jumlah donasi kamu tidak valid. Minimal melakukan donasi 500 Rupiah")
+                        else:
+                            break
+
+                    if donatur.get_dompet() < jumlah_donasi:
+                        print("Saldo dompet Anda tidak mencukupi untuk donasi ini.")
+                        lanjut()
+                        return
+
+                    pesan_donasi = input("Masukkan pesan untuk donasi: ")
+                    nama_donatur = donatur.get_nama()
+                    program_manager.update_donasi_terkumpul(program_id, jumlah_donasi)
+                    program_manager.catat_donasi(donatur.get_id(), program_id, jumlah_donasi, nama_donatur, pesan_donasi)
+                    program.tambah_donasi(jumlah_donasi)
+                    
+                    donatur.kurangi_dompet(jumlah_donasi)
+                    update_dompet(donatur.get_id(), -jumlah_donasi)
+                    db.tutup_koneksi()
+                    print("Donasi anda berhasil terkirim!.")
+                    lanjut()
+                    break
+                except ValueError:
+                    pembersih()
+                    print("Inputan tidak valid.")
+
+
+def update_dompet(user_id, amount):
+    query = "UPDATE akun SET dompet = dompet + %s WHERE id_akun = %s"
+    params = (amount, user_id)
+    db.query(query, params)
 
 def menuDompet(donatur):
     while True:
@@ -883,7 +873,7 @@ def menuDompet(donatur):
         if pilihan == 0:
             cekDompet(donatur)
         elif pilihan == 1 :
-            sistemTopUp()
+            sistemTopUp(donatur)
         elif pilihan == 2:
             break
 
@@ -892,19 +882,24 @@ def cekDompet(donatur):
     print(f"Dompet anda : {donatur.get_dompet()}")
     lanjut()
 
-def sistemTopUp():
+def sistemTopUp(donatur):
     topupamount = input("Masukkan jumlah pengisian dompet: ")
     if topupamount == "":
         print("Jumlah pengisian tidak boleh kosong.")
         lanjut()
         return
     topupamount = int(topupamount)
-    tambahandompet = top_up(topupamount)
-    #                ^ belum pake email user
-    # contoh top_up(amount, receiver_email)
-    # ambil jumlah dompet dari database dan tambahkan dengan tambahandompet
-    # lalu simpan lagi di database
+    top_up(topupamount, donatur)
     lanjut()
+
+
+
+
+
+    
+
+
+
 
         
 
