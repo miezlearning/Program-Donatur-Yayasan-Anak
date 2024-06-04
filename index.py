@@ -585,25 +585,7 @@ def forgot_account():
         elif selected_index == 3:
             menuLogin()
             return False
-        
-        # pilih = input("Masukkan Pilihan > ")
-        # if not pilih:
-        #     print("Inputan tidak boleh kosong.")
-        #     continue
-        # if not pilih.isdigit():
-        #     print("Inputan harus angka.")
-        #     continue
-        
-        # if pilih == "1":
-        #     forgot_username()
-        # elif pilih == "2":
-        #     forgot_password()
-        # elif pilih == "3":
-        #     forgot_no_telepon()
-        # elif pilih == "0":
-        #     login()
-        # else: 
-        #     print("Pilihan tidak valid.")
+
             
 
 def forgot_username():
@@ -630,10 +612,6 @@ def forgot_username():
         
 def forgot_password():
     while True:
-        # print("Metode Forgot Password : ")
-        # print("1. by Username")
-        # print("2. by No Telepon")
-        # print("0. Kembali")
         menu = ['• Dengan Username', '• Dengan No Telepon','• Kembali']
         header = "Pilih Metode Forgot Password :"
         pilih_metode = menu_navigasi(header, menu)
@@ -683,21 +661,6 @@ def forgot_password():
             return False
 
         
-        # pilih_metode = input("Masukkan Pilihan > ")
-        # if not pilih_metode:
-        #         print("Inputan tidak boleh kosong.")
-        #         continue
-        # if not pilih_metode.isdigit():
-        #     print("Inputan harus angka.")
-        #     continue
-        # if pilih_metode == "1":
-        #     pass
-        # elif pilih_metode == "2":
-        #     pass
-        # elif pilih_metode == "3":
-        #     pass
-        # else:
-        #     print("Pilihan tidak valid.")
 
 def forgot_no_telepon():
     while True:
@@ -719,7 +682,6 @@ def forgot_no_telepon():
         except Exception as e:
             print(f"Terjadi kesalahan saat mencari nomor telepon berdasarkan username: {e}")
        
-# BAGIAN LOGIN-FORGOT ACCOUNT UDAH SELESAI JANGAN DI UBAH UBAH DULU!
 
 
 
@@ -730,7 +692,7 @@ def menuDonatur(donatur):
     
     while donatur.cek_login:
         header = f"Selamat datang Donatur {donatur.get_nama()}"
-        menu = ['• Tentang Kami', '• Program Kami', '• Donasi', '• Donasi Mingguan', '• Adik Asuh', '• Dompet', '• Pengaturan Akun','• Logout']
+        menu = ['• Tentang Kami', '• Program Kami', '• Donasi', '• Donasi Otomatis', '• Adik Asuh', '• Dompet', '• Pengaturan Akun','• Logout']
         pilihan = menu_navigasi(header, menu)
         if pilihan == 0 :
             TentangKami()
@@ -739,30 +701,30 @@ def menuDonatur(donatur):
         elif pilihan == 2 :
             donasiProgram(donatur)
         elif pilihan == 3 :
-            DonasiMingguan()
+            DonasiOtomatis()
         elif pilihan == 4 :
             menu_AdikAsuh(donatur, adik_asuh_manager)
         elif pilihan == 5 :
             menuDompet(donatur)
             lanjut()
         elif pilihan == 6 :
-            pass
+            pengaturan_akun(donatur)
         elif pilihan == 7 :
             donatur.logout()
         else:
             pass
 
 
-def DonasiMingguan():
+def DonasiOtomatis():
     while True:
         header = "Halaman Donasi Mingguan"
-        menu = ['• Donasi Mingguan', '• Kalkulator Zakat', '• Kembali']
+        menu = ['• Donasi Otomatis', '• Kalkulator Zakat', '• Kembali']
         pilihan = menu_navigasi(header,menu)
-        if pilihan == 1:
+        if pilihan == 0:
             kalkulatorzakat()
+        elif pilihan == 1:
+            proses_donasiOtomatis()
         elif pilihan == 2:
-            pass
-        elif pilihan == 3:
             break
         else:
             pass
@@ -773,16 +735,6 @@ def DonasiMingguan():
 def TentangKami():
 
     while True:
-        # pembersih()
-        # print("Tentang Kami")
-        # print("1. Profil")
-        # print("2. Visi & Misi")
-        # print("3. Tujuan")
-        # print("4. Struktur Pengurus")
-        # print("5. Laporan Keuangan")
-        # print("0. Kembali")
-        # pilihan = input("Pilih Menu >")
-                    #0             1              2              3                                    4                     5
         menu = ['• Profil', '• Visi & Misi', '• Tujuan', '• Struktur Pengurus', '• Laporan Keuangan ( Coming Soon )', '• Kembali']
         header = "Informasi Tentang Kami :"
         pilihan  = menu_navigasi(header, menu)
@@ -895,18 +847,6 @@ def UserProgramKami():
 
 
 def donasiProgram(donatur):
-    # header = "Pilih Program untuk Donasi"
-    # programs = program_manager.lihat_program()
-    # options = ["• " + nama for id, nama in programs] + ["• Kembali"]
-    # pilihan = menu_navigasi(header, options)
-    # if pilihan < len(programs):
-    #     program_id = programs[pilihan][0]
-    #     program = program_manager.lihat_detail_program(program_id)
-    #     if program:
-    #         if program.cek_terpenuhi_program():
-    #             print("Target donasi untuk program ini sudah terpenuhi. Anda tidak bisa melakukan donasi lagi.")
-    #             lanjut()
-    #             donasiProgram(donatur)
     while True:
             header = "Pilih Program untuk Donasi"
             programs = program_manager.lihat_program()
@@ -1114,6 +1054,80 @@ def bayarKebutuhanAdikAsuh(donatur, adik_asuh_manager):
 
 
 
+def pengaturan_akun(donatur):
+    while True:
+        pembersih()
+        header = "Pengaturan Akun"
+        menu = ['• Ganti Password', '• Ganti Email', '• Ganti No Telepon', '• Kembali']
+        pilihan = menu_navigasi(header, menu)
+        
+        if pilihan == 0:
+            ganti_password(donatur)
+        elif pilihan == 1:
+            ganti_email(donatur)
+        elif pilihan == 2:
+            ganti_no_telepon(donatur)
+        elif pilihan == 3:
+            break
+        else:
+            print("Pilihan tidak valid. Silakan coba lagi.")
+
+def ganti_password(donatur):
+    pembersih()
+    header = "Ganti Password"
+    print(header)
+    current_password = input("Masukkan password saat ini: ").strip()
+    
+    if current_password != donatur.get_password():
+        print("Password saat ini salah.")
+    else:
+        new_password = input("Masukkan password baru: ").strip()
+        confirm_password = input("Konfirmasi password baru: ").strip()
+        
+        if new_password == confirm_password:
+            donatur.set_password(new_password)
+            # Update the password in the database
+            query = "UPDATE akun SET password = %s WHERE id_akun = %s"
+            adik_asuh_manager.db.query(query, (new_password, donatur.get_id()))
+            print("Password berhasil diubah.")
+        else:
+            print("Password baru dan konfirmasi tidak cocok.")
+    
+    lanjut()
+
+def ganti_email(donatur):
+    pembersih()
+    header = "Ganti Email"
+    print(header)
+    new_email = input("Masukkan email baru: ").strip()
+    
+    if new_email:
+        donatur.set_email(new_email)
+        # Update the email in the database
+        query = "UPDATE akun SET email = %s WHERE id_akun = %s"
+        adik_asuh_manager.db.query(query, (new_email, donatur.get_id()))
+        print("Email berhasil diubah.")
+    else:
+        print("Email baru tidak boleh kosong.")
+    
+    lanjut()
+
+def ganti_no_telepon(donatur):
+    pembersih()
+    header = "Ganti No Telepon"
+    print(header)
+    new_no_telepon = input("Masukkan no telepon baru: ").strip()
+    
+    if new_no_telepon:
+        donatur.set_notelp(new_no_telepon)
+        # Update the phone number in the database
+        query = "UPDATE akun SET notelp = %s WHERE id_akun = %s"
+        adik_asuh_manager.db.query(query, (new_no_telepon, donatur.get_id()))
+        print("No telepon berhasil diubah.")
+    else:
+        print("No telepon baru tidak boleh kosong.")
+    
+    lanjut()
 
     
 
@@ -1127,20 +1141,9 @@ def bayarKebutuhanAdikAsuh(donatur, adik_asuh_manager):
 def menuAdmin(admin):
     
     while admin.cek_login:
-        # print(f"Selamat datang Admin {admin.get_nama()}")
-        # print("1. Manajemen Program Donasi")
-        # print("2. Manajemen Adik Asuh")
-        # print("0. Logout")
-        # pilihan = input("Masukkan Pilihan")
         header = f"Selamat datang Admin {admin.get_nama()}"
         menu = ['• Manajemen Program Donasi', '• Manajemen Adik Asuh', '• Cek Rekening', '• Logout']
         pilihan = menu_navigasi(header, menu)
-        # if not pilihan:
-        #     print("Inputan tidak boleh kosong.")
-        #     continue
-        # if not pilihan.isdigit():
-        #     print("Inputan harus angka.")
-        #     continue
 
         if pilihan == 0:
             AdminManajemen_ProgramDonasi(admin, program_manager)
@@ -1161,19 +1164,11 @@ def Admin_CekRekening(admin):
 
 def AdminManajemen_ProgramDonasi(admin, program_manager):
     while True:
-        # print("Halaman Manajemen Program Yayasan")
-        # print("1. Lihat Program Yayasan")
-        # print("2. Tambah Program Yayasan")
-        # print("3. Edit Program Yayasan")
-        # print("4. Hapus Program Yayasan")
-        # print("Untuk kembali ke menu sebelumnya \"kembali\" untuk menu utama \"menu\" ")
+       
         header = "Halaman Manajemen Program Yayasan"
         menu = ['• Lihat Program Yayasan', '• Tambah Program Yayasan', '• Edit Program Yayasan', '• Hapus Program Yayasan', '• Kembali']
-        # pilihan = input("Masukkan Pilihan > ")
         pilihan = menu_navigasi(header,menu)
-        # if not pilihan:
-        #     print("Inputan tidak boleh kosong.")
-        #     continue
+        
 
         if pilihan == 0:
             lihatProgram(program_manager)
@@ -1187,17 +1182,7 @@ def AdminManajemen_ProgramDonasi(admin, program_manager):
             break
 
 
-# def lihatProgram(program_manager):
-#     while True:
-#         header = "Daftar Program Yayasan"
-#         programs = program_manager.lihat_program()
-#         options = [nama for id, nama in programs] + ["Kembali"]
-#         pilihan = menu_navigasi(header, options)
-#         if pilihan < len(programs):
-#             program_manager.lihat_detail_program(programs[pilihan][0])
-#             lanjut()
-#         else:
-#             break
+
 
 def lihatProgram(program_manager):
     while True:
@@ -1311,7 +1296,6 @@ def hapusProgram(admin, program_manager):
                     return
             dompetadmin = admin.get_dompet() + program.get_donasi_terkumpul()
             admin.set_dompet(dompetadmin)
-            # admin.set_dompet(admin.get_dompet() + program.get_donasi_terkumpul())
             
             try:
                 db.query(f"UPDATE akun SET dompet = {dompetadmin} WHERE username = '{admin.get_username()}'")
@@ -1321,23 +1305,8 @@ def hapusProgram(admin, program_manager):
             except Exception as e:
                 print(f"Terjadi kesalahan saat menghapus program: {e}")
             lanjut()
-# def hapusProgram(program_manager):
-#     program_manager.lihat_program()
-#     idx = int(input("Pilih nomor program yang akan dihapus: ")) - 1
-#     program_manager.hapus_program(idx)
-#     print("Program berhasil dihapus.")
-#     lanjut()
 
 
-
-# Konsep Adik asuh
-# Setiap donatur  hanya bisa memilih 1 anak.
-# Nama Anaka :Udin
-# QUEST :
-# 1. Beli Seragram > 200 Ribu
-# 2. Beli Peralatan Sekolah > 100
-
-# Donatur? pilih udin, otomatis apa yang dibutuhkan Udin donatur harus selesaikan dengan memberikan donasi. ( MENGAMBIL QUEST )
 
 
 
@@ -1496,7 +1465,3 @@ def lihatDonaturDanAnakAsuh(adik_asuh_manager):
 
 
 menuLogin()
-
-
-#  Checkpoint :
-# Membuat Adik asuh menjadi database
