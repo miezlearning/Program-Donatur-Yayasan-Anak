@@ -273,10 +273,12 @@ class ProgramManager:
 # Anak Asuh
 # ====================================
 class AdikAsuh:
-    def __init__(self, nama, tempat_tinggal, umur, kebutuhan):
+    def __init__(self, id_adikasuh, nama, tempat_tinggal, umur, kebutuhan, status):
         self._nama = nama
         self._tempat_tinggal = tempat_tinggal
         self._umur = umur
+        self.__id_adikasuh = id_adikasuh
+        self.__status = status
         self._kebutuhan = kebutuhan
 
     # Getters
@@ -291,6 +293,12 @@ class AdikAsuh:
 
     def get_kebutuhan(self):
         return self._kebutuhan
+    
+    def get_id_adikasuh(self):
+        return self.__id_adikasuh
+    
+    def get_status(self):
+        return self.__status
 
     # Setters
     def set_nama(self, nama):
@@ -305,6 +313,10 @@ class AdikAsuh:
     def set_kebutuhan(self, kebutuhan):
         self._kebutuhan = kebutuhan
 
+    
+    def set_status(self, status):
+        self.__status = status
+
     def __str__(self):
         return (f"Nama: {self._nama}\n"
                 f"Tempat Tinggal: {self._tempat_tinggal}\n"
@@ -313,43 +325,45 @@ class AdikAsuh:
 
 
 class AdikAsuhManager:
-    def __init__(self):
-        self.anak_asuh = []
+    def __init__(self, db):
+        self.db = db
 
     def tambah_anak(self, anak):
-        self.anak_asuh.append(anak)
+        query = "INSERT INTO adik_asuh (nama, tempat_tinggal, umur, kebutuhan, status) VALUES (%s, %s, %s, %s, %s)"
+        values = (anak.get_nama(), anak.get_tempat_tinggal(), anak.get_umur(), anak.get_kebutuhan(), anak.get_status())
+        self.db.query(query, values)
 
     def lihat_anak(self):
-        return [anak.get_nama() for anak in self.anak_asuh]
+        query = "SELECT id, nama, status FROM adik_asuh"
+        return self.db.query(query)
 
-    def lihat_detail_anak(self, idx):
-        if 0 <= idx < len(self.anak_asuh):
-            print(self.anak_asuh[idx])
+
+    def lihat_detail_anak(self, id):
+        query = "SELECT * FROM adik_asuh WHERE id = %s"
+        result = self.db.query(query, (id,))
+        if result:
+            anak = AdikAsuh(*result[0])
+            print(anak)
         else:
             print("Anak Asuh tidak ditemukan.")
 
-    def edit_anak(self, idx, **kwargs):
-        if 0 <= idx < len(self.anak_asuh):
-            anak = self.anak_asuh[idx]
-            if 'nama' in kwargs:
-                anak.set_nama(kwargs['nama'])
-            if 'tempat_tinggal' in kwargs:
-                anak.set_tempat_tinggal(kwargs['tempat_tinggal'])
-            if 'umur' in kwargs:
-                anak.set_umur(kwargs['umur'])
-            if 'kebutuhan' in kwargs:
-                anak.set_kebutuhan(kwargs['kebutuhan'])
-        else:
-            print("Anak Asuh tidak ditemukan.")
+    def edit_anak(self, id, **kwargs):
+        query = "UPDATE adik_asuh SET "
+        values = []
+        for key, value in kwargs.items():
+            query += f"{key} = %s, "
+            values.append(value)
+        query = query.rstrip(", ") + " WHERE id = %s"
+        values.append(id)
+        self.db.query(query, tuple(values))
 
-    def hapus_anak(self, idx):
-        if 0 <= idx < len(self.anak_asuh):
-            del self.anak_asuh[idx]
-        else:
-            print("Anak Asuh tidak ditemukan.")
+    def hapus_anak(self, id):
+        query = "DELETE FROM adik_asuh WHERE id = %s"
+        self.db.query(query, (id,))
+
 
 program_manager = ProgramManager(db)
-adik_asuh_manager = AdikAsuhManager()
+adik_asuh_manager = AdikAsuhManager(db)
 
 
 
@@ -664,7 +678,7 @@ def menuDonatur(donatur):
         elif pilihan == 3 :
             DonasiMingguan()
         elif pilihan == 4 :
-            pass
+            menu_AdikAsuh(donatur, adik_asuh_manager)
         elif pilihan == 5 :
             menuDompet(donatur)
             lanjut()
@@ -918,6 +932,23 @@ def sistemTopUp(donatur):
 
 
 
+def menu_AdikAsuh(donatur, adik_asuh_manager):
+    while True:
+        header = "Halaman Adik Asuh"
+        anak_list = adik_asuh_manager.lihat_anak()
+        options = [f"• {anak[1]} - {anak[2]}" for anak in anak_list if anak[2] == 'Belum di Asuh'] + ["• Kembali"]
+        pilihan = menu_navigasi(header, options)
+        if pilihan < len(anak_list):
+            id = anak_list[pilihan][0]
+            adik_asuh_manager.lihat_detail_anak(id)
+            konfirmasi = input("Apakah Anda ingin mengasuh anak ini? (ya/tidak): ")
+            if konfirmasi.lower() == 'ya':
+                print("Permintaan Anda telah dikirim ke admin untuk persetujuan.")
+                lanjut()
+        else:
+            break
+
+
     
 
 
@@ -1136,8 +1167,10 @@ def hapusProgram(admin, program_manager):
 
 
 
-# QUEST
-# Udin
+# Konsep Adik asuh
+# Setiap donatur  hanya bisa memilih 1 anak.
+# Nama Anaka :Udin
+# QUEST :
 # 1. Beli Seragram > 200 Ribu
 # 2. Beli Peralatan Sekolah > 100
 
@@ -1165,15 +1198,14 @@ def AdminManajemen_AdikAsuh(adik_asuh_manager):
 def tambahAnakAsuh(adik_asuh_manager):
     pembersih()
     print('''
-=====================================================================================================================================================================
                                                                     Tambah Data Adik Asuh
-=====================================================================================================================================================================
 ''')
     nama = input("Nama Adik Asuh: ")
     tempat_tinggal = input("Tempat Tinggal Adik Asuh: ")
     umur = input("Umur Adik Asuh: ")
     kebutuhan = input("Kebutuhan Adik Asuh: ")
-    anak = AdikAsuh(nama, tempat_tinggal, umur, kebutuhan)
+    status = 'Belum di Asuh'
+    anak = AdikAsuh(None, nama, tempat_tinggal, umur, kebutuhan, status)
     adik_asuh_manager.tambah_anak(anak)
     print("Data adik asuh telah ditambahkan")
     lanjut()
@@ -1182,14 +1214,13 @@ def tambahAnakAsuh(adik_asuh_manager):
 def editAnakAsuh(adik_asuh_manager):
     pembersih()
     header = """
-=====================================================================================================================================================================
                                                                     Ubah Data Adik Asuh
-=====================================================================================================================================================================
 """
-    options = "• "+adik_asuh_manager.lihat_anak() + ["• Kembali"]
+    anak_list = adik_asuh_manager.lihat_anak()
+    options = [f"• {anak[1]}" for anak in anak_list] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
-    if pilihan < len(adik_asuh_manager.anak_asuh):
-        idx = pilihan
+    if pilihan < len(anak_list):
+        id = anak_list[pilihan][0]
         nama = input("Nama Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
         tempat_tinggal = input("Tempat Tinggal Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
         umur = input("Umur Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
@@ -1203,7 +1234,7 @@ def editAnakAsuh(adik_asuh_manager):
             kwargs['umur'] = umur
         if kebutuhan:
             kwargs['kebutuhan'] = kebutuhan
-        adik_asuh_manager.edit_anak(idx, **kwargs)
+        adik_asuh_manager.edit_anak(id, **kwargs)
         print("Data adik asuh telah diedit.")
         lanjut()
         pembersih()
@@ -1211,19 +1242,18 @@ def editAnakAsuh(adik_asuh_manager):
 def hapusAnakAsuh(adik_asuh_manager):
     pembersih()
     header = """
-=====================================================================================================================================================================
                                                                     Hapus Data Adik Asuh
-=====================================================================================================================================================================
 """
-    options = "• "+adik_asuh_manager.lihat_anak() + ["• Kembali"]
+    anak_list = adik_asuh_manager.lihat_anak()
+    options = [f"• {anak[1]}" for anak in anak_list] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
-    if pilihan < len(adik_asuh_manager.anak_asuh):
-        idx = pilihan
+    if pilihan < len(anak_list):
+        id = anak_list[pilihan][0]
         header = "Apakah anda yakin ingin menghapus data ini?"
         options = ['Ya', 'Tidak']
         konfirmasi = menu_navigasi(header, options)
         if konfirmasi == 0:
-            adik_asuh_manager.hapus_anak(idx)
+            adik_asuh_manager.hapus_anak(id)
             print("Data Adik Asuh dihapus")
             lanjut()
             pembersih()
@@ -1235,21 +1265,22 @@ def hapusAnakAsuh(adik_asuh_manager):
 def lihatAnakAsuh(adik_asuh_manager):
     while True:
         header = """
-====================================================================================================================================================================
                                                                     Lihat Data Adik Asuh
-====================================================================================================================================================================
 """
-        options = "• "+adik_asuh_manager.lihat_anak() + ["• Kembali"]
+        anak_list = adik_asuh_manager.lihat_anak()
+        options = [f"• {anak[1]} - {anak[2]}" for anak in anak_list] + ["• Kembali"]
         pilihan = menu_navigasi(header, options)
-        if pilihan < len(adik_asuh_manager.anak_asuh):
-            adik_asuh_manager.lihat_detail_anak(pilihan)
+        if pilihan < len(anak_list):
+            id = anak_list[pilihan][0]
+            adik_asuh_manager.lihat_detail_anak(id)
             lanjut()
         else:
             break
 
 
+
 menuLogin()
 
 
-# Checkpoint Sementara :
-# Mengubah adik asuh ke database.
+#  Checkpoint :
+# Membuat Adik asuh menjadi database
