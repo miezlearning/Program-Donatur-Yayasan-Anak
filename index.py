@@ -8,6 +8,7 @@ import datetime
 from pwinput import pwinput as enkripsi_password
 # Modul Fitur Tambahan
 from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih, lanjut, org_chart, menu_navigasi, kalkulatorzakat, submenu_navigasi, top_up
+# Modul Fitur 
 from etc.fitur_tambahan import Database
 
 # Modul GUI
@@ -27,7 +28,7 @@ db = Database()
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ CLASS STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
-class User():
+class User:
     def __init__(self, user_id, username, password):
         self.__id = user_id
         self.__username = username
@@ -42,9 +43,6 @@ class User():
     def get_id(self):
         return self.__id
 
-    
-  
-
 
 class Donatur(User):
     def __init__(self, user_id, nama, username, password, notelp, email, dompet=0):
@@ -56,8 +54,6 @@ class Donatur(User):
         self.__password = password
         self.cek_login = True
 
-
-        
     def get_notelp(self):
         return self.__notelp
     
@@ -92,7 +88,6 @@ class Donatur(User):
         self.__dompet = self.__dompet - nominal_kurang
 
 
-
 class Admin(User):
     def __init__(self, user_id, nama, username, password, dompet=0):
         super().__init__(user_id, username, password)
@@ -111,6 +106,7 @@ class Admin(User):
 
     def logout(self):
         self.cek_login = False
+
 
 
 # =====================================
@@ -273,13 +269,15 @@ class ProgramManager:
 # Anak Asuh
 # ====================================
 class AdikAsuh:
-    def __init__(self, id_adikasuh, nama, tempat_tinggal, umur, kebutuhan, status):
+    def __init__(self, id_adikasuh, nama, tempat_tinggal, umur, kebutuhan, status='Belum di Asuh', target_donasi=0.00, donasi_terkumpul=0.00):
         self._nama = nama
         self._tempat_tinggal = tempat_tinggal
         self._umur = umur
         self.__id_adikasuh = id_adikasuh
         self.__status = status
         self._kebutuhan = kebutuhan
+        self._target_donasi = target_donasi
+        self._donasi_terkumpul = donasi_terkumpul
 
     # Getters
     def get_nama(self):
@@ -300,6 +298,12 @@ class AdikAsuh:
     def get_status(self):
         return self.__status
 
+    def get_target_donasi(self):
+        return self._target_donasi
+
+    def get_donasi_terkumpul(self):
+        return self._donasi_terkumpul
+
     # Setters
     def set_nama(self, nama):
         self._nama = nama
@@ -312,16 +316,25 @@ class AdikAsuh:
 
     def set_kebutuhan(self, kebutuhan):
         self._kebutuhan = kebutuhan
-
     
     def set_status(self, status):
         self.__status = status
+
+    def set_target_donasi(self, target_donasi):
+        self._target_donasi = target_donasi
+
+    def set_donasi_terkumpul(self, donasi_terkumpul):
+        self._donasi_terkumpul = donasi_terkumpul
 
     def __str__(self):
         return (f"Nama: {self._nama}\n"
                 f"Tempat Tinggal: {self._tempat_tinggal}\n"
                 f"Umur: {self._umur}\n"
-                f"Kebutuhan: {self._kebutuhan}\n")
+                f"Kebutuhan: {self._kebutuhan}\n"
+                f"Status: {self.__status}\n"
+                f"Target Donasi: {self._target_donasi}\n"
+                f"Donasi Terkumpul: {self._donasi_terkumpul}\n")
+
 
 
 class AdikAsuhManager:
@@ -329,14 +342,14 @@ class AdikAsuhManager:
         self.db = db
 
     def tambah_anak(self, anak):
-        query = "INSERT INTO adik_asuh (nama, tempat_tinggal, umur, kebutuhan, status) VALUES (%s, %s, %s, %s, %s)"
-        values = (anak.get_nama(), anak.get_tempat_tinggal(), anak.get_umur(), anak.get_kebutuhan(), anak.get_status())
+        query = "INSERT INTO adik_asuh (nama, tempat_tinggal, umur, kebutuhan, status, target_donasi, donasi_terkumpul) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        values = (anak.get_nama(), anak.get_tempat_tinggal(), anak.get_umur(), anak.get_kebutuhan(), anak.get_status(), anak.get_target_donasi(), anak.get_donasi_terkumpul())
         self.db.query(query, values)
+
 
     def lihat_anak(self):
         query = "SELECT id, nama, status FROM adik_asuh"
         return self.db.query(query)
-
 
     def lihat_detail_anak(self, id):
         query = "SELECT * FROM adik_asuh WHERE id = %s"
@@ -360,6 +373,56 @@ class AdikAsuhManager:
     def hapus_anak(self, id):
         query = "DELETE FROM adik_asuh WHERE id = %s"
         self.db.query(query, (id,))
+
+    def pilih_anak_asuh(self, donatur_id, anak_id):
+        query = "INSERT INTO donatur_anak_asuh (donatur_id, anak_id) VALUES (%s, %s)"
+        self.db.query(query, (donatur_id, anak_id))
+        
+        query = "UPDATE adik_asuh SET status = 'Sudah di Asuh' WHERE id = %s"
+        self.db.query(query, (anak_id,))
+
+    def lihat_donatur_dan_anak_asuh(self):
+        query = """
+        SELECT d.nama, a.nama, a.kebutuhan
+        FROM donatur_anak_asuh da
+        JOIN akun d ON da.donatur_id = d.id_akun
+        JOIN adik_asuh a ON da.anak_id = a.id
+        """
+        return self.db.query(query)
+    
+    def cek_donatur_memiliki_anak(self, donatur_id):
+        query = "SELECT COUNT(*) FROM donatur_anak_asuh WHERE donatur_id = %s"
+        params = (donatur_id,)
+        result = db.query(query, params)
+        return result[0][0] > 0
+    
+    def lihat_anak_asuh_donatur(self, donatur_id):
+        query = """
+        SELECT a.id, a.nama, a.status
+        FROM adik_asuh a
+        JOIN donatur_anak_asuh da ON a.id = da.anak_id
+        WHERE da.donatur_id = %s
+        """
+        params = (donatur_id,)
+        return db.query(query, params)
+
+    def bayar_kebutuhan_anak(self, donatur_id, anak_id, jumlah):
+        query = "UPDATE adik_asuh SET donasi_terkumpul = donasi_terkumpul + %s WHERE id = %s"
+        self.db.query(query, (jumlah, anak_id))
+
+        query = "SELECT donasi_terkumpul, target_donasi FROM adik_asuh WHERE id = %s"
+        result = self.db.query(query, (anak_id,))
+        if result and result[0][0] >= result[0][1]:
+            query = "DELETE FROM donatur_anak_asuh WHERE anak_id = %s"
+            self.db.query(query, (anak_id,))
+            
+            query = "DELETE FROM adik_asuh WHERE id = %s"
+            self.db.query(query, (anak_id,))
+            return True  
+        return False  
+
+
+
 
 
 program_manager = ProgramManager(db)
@@ -931,22 +994,125 @@ def sistemTopUp(donatur):
 
 
 
-
 def menu_AdikAsuh(donatur, adik_asuh_manager):
     while True:
         header = "Halaman Adik Asuh"
-        anak_list = adik_asuh_manager.lihat_anak()
-        options = [f"• {anak[1]} - {anak[2]}" for anak in anak_list if anak[2] == 'Belum di Asuh'] + ["• Kembali"]
+        options = [
+            "• Lihat Daftar Adik Asuh",
+            "• Pilih Adik Asuh",
+            "• Cek Kebutuhan Adik Asuh",
+            "• Bayar Kebutuhan Adik Asuh",
+            "• Kembali"
+        ]
         pilihan = menu_navigasi(header, options)
-        if pilihan < len(anak_list):
-            id = anak_list[pilihan][0]
-            adik_asuh_manager.lihat_detail_anak(id)
-            konfirmasi = input("Apakah Anda ingin mengasuh anak ini? (ya/tidak): ")
-            if konfirmasi.lower() == 'ya':
-                print("Permintaan Anda telah dikirim ke admin untuk persetujuan.")
-                lanjut()
-        else:
+        
+        if pilihan == 0:
+            lihatDaftarAdikAsuh(adik_asuh_manager)
+        elif pilihan == 1:
+            pilihAdikAsuh(donatur, adik_asuh_manager)
+        elif pilihan == 2:
+            cekKebutuhanAdikAsuh(donatur, adik_asuh_manager)
+        elif pilihan == 3:
+            bayarKebutuhanAdikAsuh(donatur, adik_asuh_manager)
+        elif pilihan == 4:
             break
+        else:
+            print("Pilihan tidak valid. Silakan coba lagi.")
+
+
+
+
+def lihatDaftarAdikAsuh(adik_asuh_manager):
+    pembersih()
+    header = "Daftar Adik Asuh"
+    anak_list = adik_asuh_manager.lihat_anak()
+    for anak in anak_list:
+        print(f"Nama: {anak[1]}, Status: {anak[2]}")
+    lanjut()
+    pembersih()
+
+def pilihAdikAsuh(donatur, adik_asuh_manager):
+    pembersih()
+    header = "Pilih Adik Asuh"
+    
+    if adik_asuh_manager.cek_donatur_memiliki_anak(donatur.get_id()):
+        print("Anda sudah memiliki adik asuh dan tidak bisa mengasuh lebih dari satu.")
+        lanjut()
+        return
+    
+    anak_list = adik_asuh_manager.lihat_anak()
+    options = [f"• {anak[1]} - {anak[2]}" for anak in anak_list if anak[2] == 'Belum di Asuh'] + ["• Kembali"]
+    pilihan = menu_navigasi(header, options)
+    
+    if pilihan == len(options) - 1:
+        return
+    
+    if pilihan < len(options) - 1:
+        id = [anak[0] for anak in anak_list if anak[2] == 'Belum di Asuh'][pilihan]
+        adik_asuh_manager.lihat_detail_anak(id)
+        konfirmasi = input("Apakah Anda ingin mengasuh anak ini? (ya/tidak): ")
+        if konfirmasi.lower() == 'ya':
+            adik_asuh_manager.pilih_anak_asuh(donatur.get_id(), id)
+            print("Anda telah berhasil mengasuh anak ini.")
+            lanjut()
+    else:
+        print("Pilihan tidak valid. Silakan coba lagi.")
+
+
+def cekKebutuhanAdikAsuh(donatur, adik_asuh_manager):
+    pembersih()
+    header = "Cek Kebutuhan Adik Asuh"
+    
+    anak_list = adik_asuh_manager.lihat_anak_asuh_donatur(donatur.get_id())
+    options = [f"• {anak[1]}" for anak in anak_list] + ["• Kembali"]
+    pilihan = menu_navigasi(header, options)
+    
+    if pilihan == len(options) - 1:
+        return
+    
+    if pilihan < len(options) - 1:
+        id = anak_list[pilihan][0]
+        adik_asuh_manager.lihat_detail_anak(id)
+        lanjut()
+    else:
+        print("Pilihan tidak valid. Silakan coba lagi.")
+
+
+
+def bayarKebutuhanAdikAsuh(donatur, adik_asuh_manager):
+    pembersih()
+    header = "Bayar Kebutuhan Adik Asuh"
+    
+    anak_list = adik_asuh_manager.lihat_anak_asuh_donatur(donatur.get_id())
+    options = [f"• {anak[1]}" for anak in anak_list] + ["• Kembali"]
+    pilihan = menu_navigasi(header, options)
+    
+    if pilihan == len(options) - 1:
+        return
+    
+    if pilihan < len(options) - 1:
+        id = anak_list[pilihan][0]
+        adik_asuh_manager.lihat_detail_anak(id)
+        jumlah = int(input("Masukkan jumlah donasi: "))
+        
+        if donatur.get_dompet() >= jumlah:
+            donatur.kurangi_dompet(jumlah)
+            update_dompet(donatur.get_id(), -jumlah)
+            kebutuhan_terpenuhi = adik_asuh_manager.bayar_kebutuhan_anak(donatur.get_id(), id, jumlah)
+            
+            if kebutuhan_terpenuhi:
+                print("Anak yang diasuh kebutuhan sudah terpenuhi, terima kasih sudah berdonasi.")
+            else:
+                print("Donasi telah berhasil dilakukan.")
+        else:
+            print("Saldo dompet tidak mencukupi.")
+        
+        lanjut()
+    else:
+        print("Pilihan tidak valid. Silakan coba lagi.")
+
+
+
 
 
     
@@ -1071,9 +1237,6 @@ def lihatProgram(program_manager):
 
 
 
-
-
-
 def tambahProgram(program_manager):
     nama = input("Nama Program: ")
     deskripsi = input("Deskripsi Program: ")
@@ -1181,8 +1344,8 @@ def hapusProgram(admin, program_manager):
 def AdminManajemen_AdikAsuh(adik_asuh_manager):
     while True:
         header = "Halaman Manajemen Adik Asuh"
-        menu = ['• Lihat Data Adik Asuh','• Tambah Data Adik Asuh', '• Edit Data Adik Asuh', '• Hapus Data Adik Asuh', '• Kembali']
-        pilihan = menu_navigasi(header,menu)
+        menu = ['• Lihat Data Adik Asuh', '• Tambah Data Adik Asuh', '• Edit Data Adik Asuh', '• Hapus Data Adik Asuh', '• Lihat Donatur dan Anak Asuh', '• Kembali']
+        pilihan = menu_navigasi(header, menu)
 
         if pilihan == 0:
             lihatAnakAsuh(adik_asuh_manager)
@@ -1193,23 +1356,53 @@ def AdminManajemen_AdikAsuh(adik_asuh_manager):
         elif pilihan == 3:
             hapusAnakAsuh(adik_asuh_manager)
         elif pilihan == 4:
+            lihatDonaturDanAnakAsuh(adik_asuh_manager)
+        elif pilihan == 5:
             break
 
 def tambahAnakAsuh(adik_asuh_manager):
     pembersih()
     print('''
                                                                     Tambah Data Adik Asuh
-''')
-    nama = input("Nama Adik Asuh: ")
-    tempat_tinggal = input("Tempat Tinggal Adik Asuh: ")
-    umur = input("Umur Adik Asuh: ")
-    kebutuhan = input("Kebutuhan Adik Asuh: ")
-    status = 'Belum di Asuh'
-    anak = AdikAsuh(None, nama, tempat_tinggal, umur, kebutuhan, status)
-    adik_asuh_manager.tambah_anak(anak)
-    print("Data adik asuh telah ditambahkan")
+    ''')
+    while True:
+        nama = input("Nama Adik Asuh: ").strip()
+        if not nama:
+            print("Nama tidak boleh kosong. Silakan masukkan nama yang valid.")
+            continue
+
+        tempat_tinggal = input("Tempat Tinggal Adik Asuh: ").strip()
+        if not tempat_tinggal:
+            print("Tempat tinggal tidak boleh kosong. Silakan masukkan tempat tinggal yang valid.")
+            continue
+
+        umur = input("Umur Adik Asuh: ").strip()
+        if not umur:
+            print("Umur tidak boleh kosong. Silakan masukkan umur yang valid.")
+            continue
+
+        kebutuhan = input("Kebutuhan Adik Asuh: ").strip()
+        if not kebutuhan:
+            print("Kebutuhan tidak boleh kosong. Silakan masukkan kebutuhan yang valid.")
+            continue
+
+        try:
+            target_donasi = float(input("Target Donasi: ").strip())
+        except ValueError:
+            print("Target donasi harus berupa angka. Silakan masukkan jumlah yang valid.")
+            continue
+
+        status = 'Belum di Asuh'
+        donasi_terkumpul = 0.00  
+        anak = AdikAsuh(None, nama, tempat_tinggal, umur, kebutuhan, status, target_donasi, donasi_terkumpul)
+        adik_asuh_manager.tambah_anak(anak)
+        print("Data adik asuh telah ditambahkan")
+        break
+
     lanjut()
     pembersih()
+
+
 
 def editAnakAsuh(adik_asuh_manager):
     pembersih()
@@ -1225,6 +1418,7 @@ def editAnakAsuh(adik_asuh_manager):
         tempat_tinggal = input("Tempat Tinggal Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
         umur = input("Umur Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
         kebutuhan = input("Kebutuhan Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
+        target_donasi = input("Target Donasi (biarkan kosong jika tidak ingin mengubah): ")
         kwargs = {}
         if nama:
             kwargs['nama'] = nama
@@ -1234,10 +1428,13 @@ def editAnakAsuh(adik_asuh_manager):
             kwargs['umur'] = umur
         if kebutuhan:
             kwargs['kebutuhan'] = kebutuhan
+        if target_donasi:
+            kwargs['target_donasi'] = float(target_donasi)
         adik_asuh_manager.edit_anak(id, **kwargs)
         print("Data adik asuh telah diedit.")
         lanjut()
         pembersih()
+
 
 def hapusAnakAsuh(adik_asuh_manager):
     pembersih()
@@ -1262,6 +1459,7 @@ def hapusAnakAsuh(adik_asuh_manager):
             lanjut()
             pembersih()
 
+
 def lihatAnakAsuh(adik_asuh_manager):
     while True:
         header = """
@@ -1276,6 +1474,24 @@ def lihatAnakAsuh(adik_asuh_manager):
             lanjut()
         else:
             break
+
+
+def lihatDonaturDanAnakAsuh(adik_asuh_manager):
+    pembersih()
+    print('''
+                                                                    Donatur dan Anak Asuh
+''')
+    donatur_list = adik_asuh_manager.lihat_donatur_dan_anak_asuh()
+    for donatur in donatur_list:
+        print(f"Nama Donatur: {donatur[0]}")
+        print(f"Anak di Asuh: {donatur[1]}")
+        print(f"Kebutuhan Anak Asuh: {donatur[2]}\n")
+    lanjut()
+    pembersih()
+
+
+
+
 
 
 

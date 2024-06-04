@@ -242,7 +242,7 @@ def top_up(amount, donatur):
         return
 
     code = generate_random_code()
-    send_topup_code(donatur.get_email(), code)
+    send_topup_code(donatur.get_nama(),donatur.get_email(), code)
 
     start_time = time.time()
     elapsed_time = 0
@@ -267,12 +267,12 @@ def top_up(amount, donatur):
             code = generate_random_code()
             start_time = time.time()
             elapsed_time = 0
-            send_topup_code(donatur.get_email(), code)
+            send_topup_code(donatur.get_nama(), donatur.get_email(), code)
             print('Masa berlaku kode habis. Kode baru telah di kirim.')
         else:
             print(f'Kode salah. Sisa waktu pemasukan kode: {int(remaining_time)} Detik.')
 
-def send_topup_code(receiver_email, code):
+def send_topup_code(nama, receiver_email, code):
     sender_email = 'trynore2342@gmail.com'
     app_password = 'osqo ddwe eiyw zlcj'
     subject = 'Top-up Code'
@@ -283,19 +283,28 @@ def send_topup_code(receiver_email, code):
     msg['Subject'] = subject
 
     body = f'''
-    Hai Donatur,
-
-    Berikut Kode Top-Up: {code}
-    Tolong segera mengisi kode tersebut dengan batas 2 menit.
-
-    Salam,
-    Yayasan Anak Budi Pekerti
+    <html>
+    <body>
+        <img src="cid:banner_topup" style="width: 507px; height: 127px; aspect-ratio: auto 507 / 127;">
+        <p>Hai Donatur, <b>{nama}</b>,</p>
+        <p>Berikut adalah informasi top-up Anda:</p>
+        <h3> Berikut Kode Top-Up: {code} </h3>
+        <p>Jika Anda tidak meminta informasi ini, mohon abaikan email ini.</p>
+        <p>Salam,<br>Yayasan Budi Pekerti</p>
+    </body>
+    </html>
     '''
+    
 
-    msg.attach(MIMEText(body, 'plain'))
+    gambar_path = 'etc/media/banner_topup.jpg'
+    with open(gambar_path, 'rb') as fp:
+        img = MIMEImage(fp.read())
+        img.add_header('Content-ID', '<banner_topup>')
+        img.add_header('Content-Disposition', 'inline', filename='Banner.jpeg')
+        msg.attach(img)
+
+    msg.attach(MIMEText(body, 'html'))
 
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
         server.login(sender_email, app_password)
         server.send_message(msg)
-
-
