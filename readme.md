@@ -19,7 +19,7 @@ Halo!, selamat datang di project kecil kami **Yayasan Anak Budi Pekerti**. Proje
 
  - Install seluruh modul menggunakan command `pip install -r requirements.txt`
  - Jalankan program menggunakan command `py3 index.py`
- - Import File SQL `pbotest.sql` **[Butuh Tips? Klik](#cara-import-sql)**
+ - Import File SQL `pbotest.sql` **[Butuh Tips? Klik](#-cara-import-sql)**
  - **SELAMAT MENGGUNAKAN! JANGAN LUPA STAR-NYA ⭐.**
 
  <br>
