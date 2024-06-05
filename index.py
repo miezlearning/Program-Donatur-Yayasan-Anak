@@ -7,13 +7,20 @@
 import datetime
 from pwinput import pwinput as enkripsi_password
 # Modul Fitur Tambahan
-from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih, lanjut, org_chart, menu_navigasi, kalkulatorzakat, submenu_navigasi, top_up
-# Modul Fitur 
-from etc.fitur_tambahan import Database
-
+from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih, lanjut, org_chart, menu_navigasi, kalkulatorzakat, top_up, info,berhasil, donasi_berhasil, error, info, loading_bar
+# Modul Fitur Class
+from etc.fitur_tambahan import Database, AutoDonasi, warna, ZakatCalculator
+# Modul Header
+import etc.header as hd
 # Modul GUI
 import tkinter as tk
 from tkinter import messagebox
+# Modul Tabel
+from tabulate import tabulate
+import textwrap
+
+
+
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -24,7 +31,6 @@ from tkinter import messagebox
 
 # <> Inisialisasi Modul database.
 db = Database()
-
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━ CLASS STRUCTURE ━━━━━━━━━━━━━━━━━━━━━━━━ 
@@ -53,6 +59,7 @@ class Donatur(User):
         self.__dompet = dompet
         self.__password = password
         self.cek_login = True
+        self.auto_donasi = None
 
     def get_notelp(self):
         return self.__notelp
@@ -78,14 +85,22 @@ class Donatur(User):
     def set_password(self, password):
         self.__password = password
 
+    def set_auto_donasi(self, auto_donasi):
+        self.auto_donasi = auto_donasi
+
+    def get_auto_donasi(self):
+        return self.auto_donasi
+
     def logout(self):
+        if self.auto_donasi:
+            self.auto_donasi.stop()  
         self.cek_login = False
 
     def cek_dompet(self):
         print(f"Saldo dompet Anda adalah: {self.__dompet}.")
     
     def kurangi_dompet(self, nominal_kurang):
-        self.__dompet = self.__dompet - nominal_kurang
+        self.__dompet -= nominal_kurang
 
 
 class Admin(User):
@@ -118,7 +133,6 @@ class Program:
         self._deskripsi = deskripsi
         self._target_donasi = target_donasi
         self._donasi_terkumpul = donasi_terkumpul
-
         self._tenggat = tenggat
 
     # Getters
@@ -169,9 +183,9 @@ class ProgramManager:
         )
         result = self.db.query(query, params)
         if result is not None:
-            print("Program berhasil ditambahkan.")
+            berhasil("Program berhasil ditambahkan.")
         else:
-            print("Gagal menambahkan program.")
+            error("Gagal menambahkan program.")
 
     def lihat_program(self):
         query = "SELECT id_program, nama FROM programs"
@@ -186,7 +200,7 @@ class ProgramManager:
             print(program)
             return program
         else:
-            print("Program tidak ditemukan.")
+            error("Program tidak ditemukan.")
             return None
 
     def update_donasi_terkumpul(self, program_id, jumlah):
@@ -435,9 +449,10 @@ adik_asuh_manager = AdikAsuhManager(db)
 
 def menuLogin():
     menu = ["• Login", "• Register", "• Forgot Account", "• Exit"]
+    info_message = f"Gunakan keyboard kamu untuk memilih menu dan tekan ENTER.\n"
+    header = hd.headerMenuUtama()
     while True:
-        header = "Selamat datang!"
-        selected_index = menu_navigasi(header, menu)
+        selected_index = menu_navigasi(header, menu, info_message, info)
         if selected_index == 0:
             login()
         elif selected_index == 1:
@@ -453,10 +468,10 @@ def login():
     while percobaan < maks:
         options = ["1", "2", "3"]
         menu_items = ["• Username", "• No Telepon", "• Kembali"]
-        header = "Pilih Metode Login :"
+        header = hd.SubheaderMenuUtama_Login()
         selected_index = menu_navigasi(header, menu_items)
         if selected_index == -1 or selected_index >= len(options):
-            print("Pilihan tidak valid.")
+            error("Pilihan tidak valid.")
             continue
         
         pilihan = options[selected_index]
@@ -470,13 +485,13 @@ def login():
         elif pilihan == "2":
             tipe_kredensial = "No Telp"
         
-        credential = input(f"Masukkan {tipe_kredensial} > ")
+        credential = input(f"{warna.biru+warna.bold}Masukkan {tipe_kredensial} > {warna.reset}")
         if not credential:
-            print("Inputan tidak boleh kosong.")
+            error("Inputan tidak boleh kosong.")
             continue
-        password = enkripsi_password(prompt="Masukkan Password > ", mask="•")
+        password = enkripsi_password(prompt=f"{warna.biru+warna.bold}Masukkan Password > {warna.reset}", mask="•")
         if not password:
-            print("Password tidak boleh kosong.")
+            error("Password tidak boleh kosong.")
             continue
 
         if tipe_kredensial == "No Telp":
@@ -486,27 +501,30 @@ def login():
         
         try:
             kueri = db.query(f"SELECT id_akun, nama, username, password, role, notelp, email, dompet FROM akun WHERE {tipe_kredensial} = '{credential}' AND password = '{password}'")
-            if not kueri:
-                print(f"{tipe_kredensial} atau password yang dimasukkan salah.")
+            if not kueri:   
+                error(f"{tipe_kredensial} atau password yang dimasukkan salah.")
                 lanjut()
                 percobaan += 1
             else:
                 role = kueri[0][4]
                 if role == "Donatur":
-                    donatur = Donatur(kueri[0][0], kueri[0][1], kueri[0][2], password, kueri[0][5], kueri[0][6], kueri[0][7])
-                    menuDonatur(donatur)
+                    loading_bar()
+                    donatur = Donatur(kueri[0][0], kueri[0][1], kueri[0][2], password, kueri[0][5], kueri[0][6], kueri[0][7])# << 
+                    menuDonatur(donatur) 
                 elif role == "Admin":
+                    loading_bar()
                     admin = Admin(kueri[0][0], kueri[0][1], kueri[0][2], password, kueri[0][7])
                     menuAdmin(admin)
                 else:
-                    print("Role tidak valid.")
+                    error("Role tidak valid.")
                 break
         except Exception as e:
-            print(f"Terjadi kesalahan saat melakukan login: {e}")
+            error(f"Terjadi kesalahan saat melakukan login: {e}")
             lanjut()
 
     if percobaan == maks:
         print("Anda telah melebihi batas percobaan login. Silakan coba lagi nanti.")
+        lanjut()
 
 
 
@@ -515,58 +533,60 @@ def login():
 def register():
     while True:
         pembersih()
-        nama = input("Masukkan Nama Lengkap > ")
+        header = hd.SubheaderMenuUtama_Register()
+        print(header)
+        nama = input(f"{warna.biru+warna.bold}Masukkan Nama Lengkap > {warna.reset}")
         if not nama:
-            print("Nama tidak boleh kosong.")
+            error("Nama tidak boleh kosong.")
             lanjut()
             continue
-        username = input("Masukkan Username > ")
+        username = input(f"{warna.biru+warna.bold}Masukkan Username > {warna.reset}")
         if not username:
-            print("Username tidak boleh kosong.")
+            error("Username tidak boleh kosong.")
             lanjut()
             continue
         cek_username = db.query(f"SELECT * FROM akun WHERE username = '{username}'")
         if cek_username:
-            print("Username sudah digunakan. Silakan coba dengan data yang berbeda.")
+            error("Username sudah digunakan. Silakan coba dengan data yang berbeda.")
             lanjut()
             continue
-        password = enkripsi_password(prompt="Masukkan Password > ", mask="•")
+        password = enkripsi_password(prompt=f"{warna.biru+warna.bold}Masukkan Password > {warna.reset}", mask="•")
         if not password:
-            print("Password tidak boleh kosong.")
+            error("Password tidak boleh kosong.")
             lanjut()
             continue
-        notelp = input("Masukkan No Telepon > ")
+        notelp = input(f"{warna.biru+warna.bold}Masukkan No Telepon > {warna.reset}")
         if not notelp:
-            print("Nomor telepon tidak boleh kosong.")
+            error("Nomor telepon tidak boleh kosong.")
             lanjut()
             continue
         cek_notelp = db.query(f"SELECT * FROM akun WHERE notelp = '{notelp}'")
         if cek_notelp:
-            print("Nomor telepon sudah digunakan. Silakan coba dengan data yang berbeda.")
+            error("Nomor telepon sudah digunakan. Silakan coba dengan data yang berbeda.")
             lanjut()
             continue
         percobaan_email = True
         while percobaan_email:
-            email = input("Masukkan Email > ")
+            email = input(f"{warna.biru+warna.bold}Masukkan Email > {warna.reset}")
             if validasi_email(email):
                 percobaan_email = False
             else:
-                print("Email tidak valid. Coba masukkan kembali.") 
+                error("Email tidak valid. Coba masukkan kembali.") 
 
         cek_email = db.query(f"SELECT * FROM akun WHERE email = '{email}'")
         if cek_email:
-            print("Email sudah digunakan. Silakan coba dengan data yang berbeda.")
+            info("Email sudah digunakan. Silakan coba dengan data yang berbeda.")
             lanjut()
             continue
 
         try:
             donatur = Donatur(None, nama, username, password, notelp, email, 0)
             db.query(f"INSERT INTO akun(nama, username, password, notelp, role, email, dompet) VALUES ('{donatur.get_nama()}','{donatur.get_username()}', '{donatur.get_password()}', '{donatur.get_notelp()}', 'Donatur', '{donatur.get_email()}', {donatur.get_dompet()})")
-            print("Berhasil Daftar...")
+            berhasil("Berhasil Daftar...")
             lanjut()
             break  
         except Exception as e:
-            print(f"Terjadi kesalahan saat melakukan register: {e}")
+            error(f"Terjadi kesalahan saat melakukan register: {e}")
             lanjut()
 
     
@@ -574,7 +594,7 @@ def register():
 def forgot_account():
     while True:
         menu = ['• Forgot Username', '• Forgot Password', '• Forgot No Telepon', '• Kembali']
-        header = "Pilih Metode Forgot Account :"
+        header = hd.SubheaderMenuUtama_ForgotAccount()
         selected_index = menu_navigasi(header, menu)
         if selected_index == 0:
             forgot_username()
@@ -590,9 +610,12 @@ def forgot_account():
 
 def forgot_username():
     while True:
-        notelp = input("Masukkan No Telepon > ")
+        pembersih()
+        header = hd.SubheaderMenuUtama_Username()
+        print(header)
+        notelp = input(f"{warna.biru+warna.bold}Masukkan No Telepon > {warna.reset}")
         if not notelp:
-            print("No Telepon tidak boleh kosong")
+            error("No Telepon tidak boleh kosong.")
             continue
         try:
             cari_username = db.query(f"SELECT nama, username, password, notelp, email FROM akun WHERE notelp = '{notelp}'")
@@ -600,26 +623,26 @@ def forgot_username():
                 nama, username, password, notelp, email = cari_username[0]
                 if validasi_email(email):
                     kirim_forgot_account(nama, username, password, notelp, email)
-                    print("Informasi akun telah dikirim ke email Anda.")
+                    berhasil("Informasi akun telah dikirim ke email Anda.")
                     return False
                 else:
-                    print("Email tidak valid.")
+                    error("Email tidak valid.")
             else:
-                print("Nomor telepon tidak ditemukan.")
+                info("Nomor telepon tidak ditemukan.")
         except Exception as e:
-            print(f"Terjadi kesalahan saat melakukan pencarian username: {e}")
+            error(f"Terjadi kesalahan saat melakukan pencarian username: {e}")
 
         
 def forgot_password():
     while True:
         menu = ['• Dengan Username', '• Dengan No Telepon','• Kembali']
-        header = "Pilih Metode Forgot Password :"
+        header = hd.SubheaderMenuUtama_Password()
         pilih_metode = menu_navigasi(header, menu)
         if pilih_metode == 0:
             while True:
-                username = input("Masukkan Username > ")
+                username = input(f"{warna.biru+warna.bold}Masukkan Username > {warna.reset}")
                 if not username:
-                    print("Inputan tidak boleh kosong.")
+                    error("Inputan tidak boleh kosong.")
                     continue
                 try:
                     cari_username = db.query(f"SELECT nama, username, password, notelp, email FROM akun WHERE username = '{username}'")
@@ -627,18 +650,18 @@ def forgot_password():
                         nama, username, password, notelp, email = cari_username[0]
                         if validasi_email(email):
                             kirim_forgot_account(nama, username, password, notelp, email)
-                            print("Informasi akun telah dikirim ke email Anda.")
+                            berhasil("Informasi akun telah dikirim ke email Anda.")
                             return False
                         else:
-                            print("Email tidak valid.")
+                            error("Email tidak valid.")
                     else:
-                        print("Username tidak ditemukan.")
+                        info("Username tidak ditemukan.")
                 except Exception as e:
-                    print(f"Terjadi kesalahan saat mencari password berdasarkan username: {e}")
+                    error(f"Terjadi kesalahan saat mencari password berdasarkan username: {e}")
 
         elif pilih_metode == 1:
             while True:
-                notelp = input("Masukkan No Telepon > ")
+                notelp = input(f"{warna.biru+warna.bold}Masukkan No Telepon > {warna.reset}")
                 if not pilih_metode:
                     print("Inputan tidak boleh kosong.")
                     continue
@@ -664,23 +687,26 @@ def forgot_password():
 
 def forgot_no_telepon():
     while True:
-        username = input("Masukkan Username > ")
+        pembersih()
+        header = hd.SubheaderMenuUtama_NoTelp()
+        print(header)
+        username = input(f"{warna.biru+warna.bold}Masukkan Username > {warna.reset}")
         if not username:
-            print("Inputan tidak boleh kosong.")
+            error("Inputan tidak boleh kosong.")
         try:
             cari_notelp = db.query(f"SELECT nama, username, password, notelp, email FROM akun WHERE username = '{username}'")
             if cari_notelp:
                 nama, username, password, notelp, email = cari_notelp[0]
                 if validasi_email(email):
                     kirim_forgot_account(nama, username, password, notelp, email)
-                    print("Informasi akun telah dikirim ke email Anda.")
+                    berhasil("Informasi akun telah dikirim ke email Anda.")
                     return False
                 else:
-                    print("Email tidak valid.")
+                    error("Email tidak valid.")
             else:
-                print("Username tidak ditemukan.")
+                info("Username tidak ditemukan.")
         except Exception as e:
-            print(f"Terjadi kesalahan saat mencari nomor telepon berdasarkan username: {e}")
+            error(f"Terjadi kesalahan saat mencari nomor telepon berdasarkan username: {e}")
        
 
 
@@ -689,54 +715,100 @@ def forgot_no_telepon():
 
 
 def menuDonatur(donatur):
-    
     while donatur.cek_login:
-        header = f"Selamat datang Donatur {donatur.get_nama()}"
-        menu = ['• Tentang Kami', '• Program Kami', '• Donasi', '• Donasi Otomatis', '• Adik Asuh', '• Dompet', '• Pengaturan Akun','• Logout']
-        pilihan = menu_navigasi(header, menu)
-        if pilihan == 0 :
+        header = hd.headerMenuDonatur(donatur)
+        info_message = "Gunakan keyboard kamu untuk memilih menu dan tekan ENTER.\n"
+        menu = ['• Tentang Kami', '• Program Kami', '• Donasi', '• Donasi Otomatis', '• Adik Asuh', '• Dompet', '• Pengaturan Akun', '• Logout']
+
+        pilihan = menu_navigasi(header, menu, info_message, info)
+
+        if pilihan == 0:
             TentangKami()
-        elif pilihan == 1 :
+        elif pilihan == 1:
             UserProgramKami()
-        elif pilihan == 2 :
+        elif pilihan == 2:
             donasiProgram(donatur)
-        elif pilihan == 3 :
-            DonasiOtomatis()
-        elif pilihan == 4 :
+        elif pilihan == 3:
+            DonasiOtomatis(donatur, program_manager)
+        elif pilihan == 4:
             menu_AdikAsuh(donatur, adik_asuh_manager)
-        elif pilihan == 5 :
+        elif pilihan == 5:
             menuDompet(donatur)
             lanjut()
-        elif pilihan == 6 :
+        elif pilihan == 6:
             pengaturan_akun(donatur)
-        elif pilihan == 7 :
+        elif pilihan == 7:
             donatur.logout()
         else:
-            pass
+            break
 
+      
 
-def DonasiOtomatis():
-    while True:
-        header = "Halaman Donasi Mingguan"
-        menu = ['• Donasi Otomatis', '• Kalkulator Zakat', '• Kembali']
-        pilihan = menu_navigasi(header,menu)
+def proses_donasiOtomatis(donatur, program_manager):
+    auto_donasi = donatur.get_auto_donasi()
+
+    info_message = f"\nPerlu diperhatikan dompet yang kamu masukkan akan terus berdonasi, bisa dihentikan ketika logout atau hentikan manual.\n"
+    header = hd.Subheader_MenuDonasiOtomatis()
+    if auto_donasi and auto_donasi.active:
+        menu = ['• Hentikan Donasi Otomatis', '• Kembali']
+        info_message1 = f'test'
+        pilihan = menu_navigasi(header, menu, info_message1, info)
         if pilihan == 0:
-            kalkulatorzakat()
+            auto_donasi.stop()
+            donatur.set_auto_donasi(None)  
+            print("Donasi otomatis dihentikan.")
+            lanjut()
+        return
+
+    programs = program_manager.lihat_program()
+    options = ["• " + nama for id, nama in programs] + ["• Kembali"]
+    pilihan = menu_navigasi(header, options, info_message, info)
+
+    if pilihan == len(programs):
+        return
+
+    if pilihan < len(programs):
+        program_id = programs[pilihan][0]
+        program = program_manager.lihat_detail_program(program_id)
+        if program:
+            if program.cek_terpenuhi_program():
+                print("Target donasi untuk program ini sudah terpenuhi. Anda tidak bisa melakukan donasi lagi.")
+                lanjut()
+                return
+            else:
+                jumlah = int(input(f"{warna.biru+warna.bold}Masukkan Jumlah Donasi > {warna.reset}").strip())
+                if auto_donasi:
+                    auto_donasi.stop()  
+                auto_donasi = AutoDonasi(donatur, program_manager, program_id, jumlah)
+                auto_donasi.start()
+                donatur.set_auto_donasi(auto_donasi)  
+                print("Donasi otomatis dimulai.")
+                lanjut()
+
+
+
+def DonasiOtomatis(donatur, program_manager):
+    while True:
+        header = hd.headerDonasiOtomatis()
+        menu = ['• Donasi Otomatis', '• Kalkulator Zakat', '• Kembali']
+        info_message = f'{donatur.get_dompet()} ini adalah sisa dompet kamu'
+        pilihan = menu_navigasi(header, menu,info_message, info)
+
+        if pilihan == 0:
+            proses_donasiOtomatis(donatur, program_manager)
         elif pilihan == 1:
-            proses_donasiOtomatis()
+            kalkulatorzakat()
         elif pilihan == 2:
             break
         else:
-            pass
-        
-
+            break
 
 
 def TentangKami():
 
     while True:
-        menu = ['• Profil', '• Visi & Misi', '• Tujuan', '• Struktur Pengurus', '• Laporan Keuangan ( Coming Soon )', '• Kembali']
-        header = "Informasi Tentang Kami :"
+        menu = ['• Profil', '• Visi & Misi', '• Tujuan', '• Struktur Pengurus', '• Laporan Keuangan', '• Kembali']
+        header = hd.headerTentangKamiUtama()
         pilihan  = menu_navigasi(header, menu)
         
         if pilihan == 0:
@@ -748,97 +820,148 @@ def TentangKami():
         elif pilihan == 3:
             struktur_pengurus()
         elif pilihan == 4:
-            laporan_keuangan() #Nanti aja setelah donasi dan program kami selesai
+            laporan_keuangan(program_manager) 
         elif pilihan == 5:
             break
         else:
-            print("Pilihan tidak valid.")
+            error("Pilihan tidak valid.")
             lanjut()
 
 
 def profil():
-    print('''
-=====================================================================================================================================================================
-                                                Selamat datang di aplikasi Yayasan Anak Budi Pekerti!
-=====================================================================================================================================================================
-
-Yayasan kami didirikan untuk memberikan dukungan dan pendidikan bagi anak-anak yang kurang beruntung, menciptakan lingkungan yang penuh kasih dan
-mendukung perkembangan optimal mereka.
-
-Aplikasi ini memiliki berbagai fitur untuk memudahkan Anda, seperti halaman login yang lengkap dengan opsi register, pemulihan akun, pemulihan kata sandi
-nama pengguna, dan nomor telepon yang terlupakan.
-
-Menu utama untuk pengguna mencakup informasi tentang kami, profil yayasan, visi, misi, tujuan, struktur pengurus, dan laporan keuangan. Selain itu, Anda dapat
-menjelajahi program kami, melakukan donasi, mengikuti donasi mingguan, dan mendukung program adik asuh.
-
-Bagi admin, tersedia fitur manajemen program donasi yang mencakup tambah, edit, hapus, lihat, dan konfirmasi program donasi. Juga ada manajemen adik asuh yang
-memungkinkan admin untuk menambah, mengedit, menghapus, dan melihat data anak.
-
+    pembersih()
+    header = hd.SubheaderTentangKami_Profil()
+    print(header)
+    
+    profil_text = '''
+Yayasan kami didirikan untuk memberikan dukungan dan pendidikan bagi anak-anak yang kurang beruntung, menciptakan lingkungan yang penuh kasih dan mendukung perkembangan optimal mereka.
+Aplikasi ini memiliki berbagai fitur untuk memudahkan Anda, seperti halaman login yang lengkap dengan opsi register, pemulihan akun, pemulihan kata sandi nama pengguna, dan nomor telepon yang terlupakan.
+Menu utama untuk pengguna mencakup informasi tentang kami, profil yayasan, visi, misi, tujuan, struktur pengurus, dan laporan keuangan. Selain itu, Anda dapat menjelajahi program kami, melakukan donasi, mengikuti donasi mingguan, dan mendukung program adik asuh.
+Bagi admin, tersedia fitur manajemen program donasi yang mencakup tambah, edit, hapus, lihat, dan konfirmasi program donasi. Juga ada manajemen adik asuh yang memungkinkan admin untuk menambah, mengedit, menghapus, dan melihat data anak.
 Fitur tambahan dalam aplikasi ini termasuk koneksi database, karakter kata sandi, pembersihan layar terminal, dan email untuk pemulihan akun yang terlupakan.
+Dengan aplikasi ini, kami berharap dapat memudahkan Anda untuk berpartisipasi dalam mendukung anak-anak yang membutuhkan, melalui berbagai program yang kami tawarkan.
+    '''
 
-Dengan aplikasi ini, kami berharap dapat memudahkan Anda untuk berpartisipasi dalam mendukung anak-anak yang membutuhkan, melalui berbagai program yang kami
-tawarkan.
-=====================================================================================================================================================================
-''')
+    wrapped_profil = textwrap.fill(profil_text, width=80)
+    
+    table_data = [
+        [f"{warna.bold}{warna.biru_tebel}Selamat datang di aplikasi Yayasan Anak Budi Pekerti!{warna.putih}"],
+        [""],
+        [wrapped_profil+warna.reset]
+    ]
+
+    print(tabulate(table_data, tablefmt="pretty"))
     lanjut()
     pembersih()
     return
-
 
 def visi_misi():
-    print('''
-=====================================================================================================================================================================
-> Visi
+    pembersih()
+    header = hd.SubheaderTentangKami_Visi_Misi()
+    print(header)
 
-Menjadi yayasan terdepan yang menyediakan pendidikan dan dukungan komprehensif bagi anak-anak yang kurang beruntung, sehingga mereka dapat tumbuh menjadi individu
-yang berintegritas, berpengetahuan, dan mandiri.
-=====================================================================================================================================================================
-> Misi
+    visi = "Menjadi yayasan terdepan yang menyediakan pendidikan dan dukungan komprehensif bagi anak-anak yang kurang beruntung, sehingga mereka dapat tumbuh menjadi individu yang berintegritas, berpengetahuan, dan mandiri."
+    misi = [
+        "1. Menyediakan akses pendidikan berkualitas yang terjangkau bagi anak-anak yang kurang beruntung.",
+        "2. Menciptakan lingkungan yang aman, sehat, dan mendukung untuk perkembangan fisik dan mental anak-anak.",
+        "3. Mengembangkan program-program yang berfokus pada peningkatan keterampilan hidup, kepercayaan diri, dan kreativitas anak-anak.",
+        "4. Menjalin kerjasama dengan berbagai pihak untuk memperluas jangkauan dan efektivitas program-program yayasan.",
+        "5. Menyediakan layanan kesehatan dan kesejahteraan yang komprehensif untuk mendukung pertumbuhan optimal anak-anak."
+    ]
 
-1. Menyediakan akses pendidikan berkualitas yang terjangkau bagi anak-anak yang kurang beruntung.
-2. Menciptakan lingkungan yang aman, sehat, dan mendukung untuk perkembangan fisik dan mental anak-anak.
-3. Mengembangkan program-program yang berfokus pada peningkatan keterampilan hidup, kepercayaan diri, dan kreativitas anak-anak.
-4. Menjalin kerjasama dengan berbagai pihak untuk memperluas jangkauan dan efektivitas program-program yayasan.
-5. Menyediakan layanan kesehatan dan kesejahteraan yang komprehensif untuk mendukung pertumbuhan optimal anak-anak.
-=====================================================================================================================================================================
-          ''')
+    # Format visi dan misi dalam bentuk tabel
+    table_data = [
+        [warna.bold + "Visi" + warna.reset, visi],
+        [warna.bold + "Misi" + warna.reset, "\n".join(misi)]
+    ]
+
+    # Cetak tabel menggunakan tabulate
+    print(tabulate(table_data, tablefmt="plain"))
     lanjut()
     pembersih()
     return
-    
-def tujuan():
-    print('''
-=====================================================================================================================================================================
-> Tujuan          
 
-1. Meningkatkan kualitas pendidikan dan prestasi akademis anak-anak melalui program pendidikan yang inovatif dan berkelanjutan.
-2. Membangun karakter dan integritas anak-anak melalui kegiatan budi pekerti dan nilai-nilai moral.
-3. Memastikan setiap anak memiliki akses ke fasilitas kesehatan dasar dan layanan pendukung psikologis.
-4. Memberdayakan anak-anak dengan keterampilan hidup yang dibutuhkan untuk menghadapi tantangan masa depan.
-5. Menggalang dukungan dan partisipasi masyarakat dalam upaya peningkatan kesejahteraan anak-anak yang kurang beruntung.
-=====================================================================================================================================================================
-''')
+def tujuan():
+    pembersih()
+    header = hd.SubheaderTentangKami_Tujuan()
+    print(header)
+
+    tujuan_data = [
+        ["1.", "Meningkatkan kualitas pendidikan dan prestasi akademis anak-anak melalui program pendidikan yang inovatif dan berkelanjutan."],
+        ["2.", "Membangun karakter dan integritas anak-anak melalui kegiatan budi pekerti dan nilai-nilai moral."],
+        ["3.", "Memastikan setiap anak memiliki akses ke fasilitas kesehatan dasar dan layanan pendukung psikologis."],
+        ["4.", "Memberdayakan anak-anak dengan keterampilan hidup yang dibutuhkan untuk menghadapi tantangan masa depan."],
+        ["5.", "Menggalang dukungan dan partisipasi masyarakat dalam upaya peningkatan kesejahteraan anak-anak yang kurang beruntung."]
+    ]
+
+    # Cetak menggunakan tabulate
+    print(tabulate(tujuan_data, headers=["", f"{warna.bold}Tujuan{warna.reset}"], tablefmt="plain"))
+
     lanjut()
     pembersih()
     return
 
 def struktur_pengurus():
+    pembersih()
+    header = hd.SubheaderTentangKami_StrukturPengurus()
+    print(header)
     org_chart()
     lanjut()
     pembersih()
     return
 
-def laporan_keuangan():
-    print('''
-=====================================================================================================================================================================
->Laporan Keuangan
-          
-Halaman ini belum selesai, mohon gunakan halaman lain terlebih dahulu.
-=====================================================================================================================================================================
-''')
-    lanjut()
-    pembersih()
-    return
+import matplotlib.pyplot as plt
+
+def laporan_keuangan(program_manager):
+    while True:
+        header = hd.SubheaderTentangKami_LaporanKeuangan()
+        programs = program_manager.lihat_program()
+        options = [f"• {nama}" for _, nama in programs] + ["• Kembali"]
+        pilihan = menu_navigasi(header, options)
+
+        if pilihan == len(programs):
+            break
+
+        if pilihan < len(programs):
+            program_id = programs[pilihan][0]
+            histori_donasi = program_manager.lihat_histori_donasi(program_id)
+            
+            # Persiapkan data untuk tabulasi
+            table_data = []
+            total_donasi = 0
+            for donasi in histori_donasi:
+                total_donasi += donasi[2]
+                table_data.append([donasi[0], donasi[1], donasi[2], donasi[3]])
+            
+            table_data.append([f"{warna.hijau+warna.bold}Total Donasi Terkumpul: {warna.reset}", "", f"{warna.hijau+warna.bold}{total_donasi}{warna.reset}", ""])
+
+            
+            headers = ["Donatur", "Pesan", "Jumlah Donasi", "Tanggal"]
+            
+            print(tabulate(table_data, headers=headers, tablefmt="rounded_outline"))
+            lanjut()
+            choices = ["Tampilkan Grafik", "Kembali"]
+            header = "Pilihan Anda:"
+            selected_index = menu_navigasi(header, choices)
+            choice = str(selected_index + 1)
+
+            if choice == "1":
+                # Buat grafik
+                donatur = [donasi[0] for donasi in histori_donasi]
+                jumlah_donasi = [donasi[2] for donasi in histori_donasi]
+                
+                plt.bar(donatur, jumlah_donasi, color='green')
+                plt.xlabel('Donatur')
+                plt.ylabel('Jumlah Donasi')
+                plt.title('Grafik Donasi per Donatur')
+                plt.xticks(rotation=45, ha='right')
+                plt.tight_layout()
+                plt.show()
+                
+            elif choice == "2":
+                lanjut()
+
+
 
 
 def UserProgramKami():
@@ -848,7 +971,7 @@ def UserProgramKami():
 
 def donasiProgram(donatur):
     while True:
-            header = "Pilih Program untuk Donasi"
+            header = hd.headerDonasi()
             programs = program_manager.lihat_program()
             options = ["• " + nama for id, nama in programs] + ["• Kembali"]
             pilihan = menu_navigasi(header, options)
@@ -868,7 +991,7 @@ def donasiProgram(donatur):
                     while True:
                         try:
                             print("Jika ingin kembali ketik \"0\"")
-                            jumlah_donasi = int(input("Masukkan jumlah donasi: "))
+                            jumlah_donasi = int(input(f"{warna.biru+warna.bold}Masukkan jumlah donasi > {warna.reset}"))
 
                             if jumlah_donasi == 0:
                                 # Kembali ke menu program donasi
@@ -882,7 +1005,7 @@ def donasiProgram(donatur):
                                     lanjut()
                                     break
 
-                                pesan_donasi = input("Masukkan pesan untuk donasi: ")
+                                pesan_donasi = input(f"{warna.biru+warna.bold}Masukkan pesan untuk donasi > {warna.reset}")
                                 nama_donatur = donatur.get_nama()
                                 program_manager.update_donasi_terkumpul(program_id, jumlah_donasi)
                                 program_manager.catat_donasi(donatur.get_id(), program_id, jumlah_donasi, nama_donatur, pesan_donasi)
@@ -891,12 +1014,12 @@ def donasiProgram(donatur):
                                 donatur.kurangi_dompet(jumlah_donasi)
                                 update_dompet(donatur.get_id(), -jumlah_donasi)
                                 db.tutup_koneksi()
-                                print("Donasi anda berhasil terkirim!.")
+                                donasi_berhasil("Donasi anda berhasil terkirim!.", jumlah_donasi)
                                 lanjut()
                                 break
                         except ValueError:
                             pembersih()
-                            print("Inputan tidak valid.")
+                            error("Inputan tidak valid.")
 
 
 def update_dompet(user_id, amount):
@@ -906,7 +1029,7 @@ def update_dompet(user_id, amount):
 
 def menuDompet(donatur):
     while True:
-        header = f"Dompet {donatur.get_nama()}"
+        header = hd.headerDompet(donatur)
         menu = ["Cek Dompet", "Top Up Dompet", "Kembali"]
         pilihan = menu_navigasi(header, menu)
         if pilihan == 0:
@@ -917,14 +1040,19 @@ def menuDompet(donatur):
             break
 
 def cekDompet(donatur):
-    # pembersih()
-    print(f"Dompet anda : {donatur.get_dompet()}")
+    pembersih()
+    header = hd.SubheaderDompet()
+    print(header)
+    info(f"Dompet anda : {donatur.get_dompet()}")
     lanjut()
 
 def sistemTopUp(donatur):
-    topupamount = input("Masukkan jumlah pengisian dompet: ")
+    pembersih()
+    header = hd.SubheaderTopup()
+    print(header)
+    topupamount = input(f"{warna.biru+warna.bold}Masukkan jumlah pengisian dompet > {warna.reset}")
     if topupamount == "":
-        print("Jumlah pengisian tidak boleh kosong.")
+        error("Jumlah pengisian tidak boleh kosong.")
         lanjut()
         return
     topupamount = int(topupamount)
@@ -936,7 +1064,8 @@ def sistemTopUp(donatur):
 
 def menu_AdikAsuh(donatur, adik_asuh_manager):
     while True:
-        header = "Halaman Adik Asuh"
+        infotxt = f'Hai, {donatur.get_nama()} kamu hanya bisa memilih 1 adik asuh.\n'
+        header = hd.headerAdikasuh()
         options = [
             "• Lihat Daftar Adik Asuh",
             "• Pilih Adik Asuh",
@@ -944,7 +1073,7 @@ def menu_AdikAsuh(donatur, adik_asuh_manager):
             "• Bayar Kebutuhan Adik Asuh",
             "• Kembali"
         ]
-        pilihan = menu_navigasi(header, options)
+        pilihan = menu_navigasi(header, options, infotxt,info)
         
         if pilihan == 0:
             lihatDaftarAdikAsuh(adik_asuh_manager)
@@ -957,14 +1086,16 @@ def menu_AdikAsuh(donatur, adik_asuh_manager):
         elif pilihan == 4:
             break
         else:
-            print("Pilihan tidak valid. Silakan coba lagi.")
+            error("Pilihan tidak valid. Silakan coba lagi.")
+            lanjut()
 
 
 
 
 def lihatDaftarAdikAsuh(adik_asuh_manager):
     pembersih()
-    header = "Daftar Adik Asuh"
+    header = hd.SubheaderLihatAdikasuh()
+    print(header)
     anak_list = adik_asuh_manager.lihat_anak()
     for anak in anak_list:
         print(f"Nama: {anak[1]}, Status: {anak[2]}")
@@ -973,10 +1104,10 @@ def lihatDaftarAdikAsuh(adik_asuh_manager):
 
 def pilihAdikAsuh(donatur, adik_asuh_manager):
     pembersih()
-    header = "Pilih Adik Asuh"
+    header = hd.SubheaderPilihAdikasuh()
     
     if adik_asuh_manager.cek_donatur_memiliki_anak(donatur.get_id()):
-        print("Anda sudah memiliki adik asuh dan tidak bisa mengasuh lebih dari satu.")
+        info("Anda sudah memiliki adik asuh dan tidak bisa mengasuh lebih dari satu.")
         lanjut()
         return
     
@@ -990,18 +1121,19 @@ def pilihAdikAsuh(donatur, adik_asuh_manager):
     if pilihan < len(options) - 1:
         id = [anak[0] for anak in anak_list if anak[2] == 'Belum di Asuh'][pilihan]
         adik_asuh_manager.lihat_detail_anak(id)
-        konfirmasi = input("Apakah Anda ingin mengasuh anak ini? (ya/tidak): ")
+        konfirmasi = input(f"{warna.biru+warna.bold}Apakah Anda ingin mengasuh anak ini? (ya/tidak) > {warna.reset}")
         if konfirmasi.lower() == 'ya':
             adik_asuh_manager.pilih_anak_asuh(donatur.get_id(), id)
-            print("Anda telah berhasil mengasuh anak ini.")
+            berhasil("Anda telah berhasil mengasuh anak ini.")
             lanjut()
     else:
-        print("Pilihan tidak valid. Silakan coba lagi.")
+        error("Pilihan tidak valid. Silakan coba lagi.")
+        lanjut()
 
 
 def cekKebutuhanAdikAsuh(donatur, adik_asuh_manager):
     pembersih()
-    header = "Cek Kebutuhan Adik Asuh"
+    header = hd.SubheaderKebutuhanAdikasuh()
     
     anak_list = adik_asuh_manager.lihat_anak_asuh_donatur(donatur.get_id())
     options = [f"• {anak[1]}" for anak in anak_list] + ["• Kembali"]
@@ -1015,13 +1147,14 @@ def cekKebutuhanAdikAsuh(donatur, adik_asuh_manager):
         adik_asuh_manager.lihat_detail_anak(id)
         lanjut()
     else:
-        print("Pilihan tidak valid. Silakan coba lagi.")
+        error("Pilihan tidak valid. Silakan coba lagi.")
+        lanjut()
 
 
 
 def bayarKebutuhanAdikAsuh(donatur, adik_asuh_manager):
     pembersih()
-    header = "Bayar Kebutuhan Adik Asuh"
+    header = hd.SubheaderBayarAdikasuh()
     
     anak_list = adik_asuh_manager.lihat_anak_asuh_donatur(donatur.get_id())
     options = [f"• {anak[1]}" for anak in anak_list] + ["• Kembali"]
@@ -1033,7 +1166,7 @@ def bayarKebutuhanAdikAsuh(donatur, adik_asuh_manager):
     if pilihan < len(options) - 1:
         id = anak_list[pilihan][0]
         adik_asuh_manager.lihat_detail_anak(id)
-        jumlah = int(input("Masukkan jumlah donasi: "))
+        jumlah = int(input(f"{warna.biru+warna.bold}Masukkan jumlah donasi > {warna.reset}"))
         
         if donatur.get_dompet() >= jumlah:
             donatur.kurangi_dompet(jumlah)
@@ -1041,15 +1174,16 @@ def bayarKebutuhanAdikAsuh(donatur, adik_asuh_manager):
             kebutuhan_terpenuhi = adik_asuh_manager.bayar_kebutuhan_anak(donatur.get_id(), id, jumlah)
             
             if kebutuhan_terpenuhi:
-                print("Anak yang diasuh kebutuhan sudah terpenuhi, terima kasih sudah berdonasi.")
+                info("Anak yang diasuh kebutuhan sudah terpenuhi, terima kasih sudah berdonasi.")
             else:
-                print("Donasi telah berhasil dilakukan.")
+                donasi_berhasil("Donasi telah berhasil dilakukan.", jumlah)
         else:
-            print("Saldo dompet tidak mencukupi.")
+            info("Saldo dompet tidak mencukupi.")
         
         lanjut()
     else:
-        print("Pilihan tidak valid. Silakan coba lagi.")
+        error("Pilihan tidak valid. Silakan coba lagi.")
+        lanjut()
 
 
 
@@ -1057,7 +1191,7 @@ def bayarKebutuhanAdikAsuh(donatur, adik_asuh_manager):
 def pengaturan_akun(donatur):
     while True:
         pembersih()
-        header = "Pengaturan Akun"
+        header = hd.headerPengaturan()
         menu = ['• Ganti Password', '• Ganti Email', '• Ganti No Telepon', '• Kembali']
         pilihan = menu_navigasi(header, menu)
         
@@ -1070,45 +1204,46 @@ def pengaturan_akun(donatur):
         elif pilihan == 3:
             break
         else:
-            print("Pilihan tidak valid. Silakan coba lagi.")
+            error("Pilihan tidak valid. Silakan coba lagi.")
+            lanjut()
 
 def ganti_password(donatur):
     pembersih()
-    header = "Ganti Password"
+    header = hd.SubheaderGantiPassword()
     print(header)
-    current_password = input("Masukkan password saat ini: ").strip()
+    current_password = input(f"{warna.biru+warna.bold}Masukkan password saat ini > {warna.reset}").strip()
     
     if current_password != donatur.get_password():
-        print("Password saat ini salah.")
+        error("Password saat ini salah.")
     else:
-        new_password = input("Masukkan password baru: ").strip()
-        confirm_password = input("Konfirmasi password baru: ").strip()
+        new_password = input(f"{warna.biru+warna.bold}Masukkan password baru > {warna.reset}").strip()
+        confirm_password = input(f"{warna.biru+warna.bold}Konfirmasi password baru > {warna.reset}").strip()
         
         if new_password == confirm_password:
             donatur.set_password(new_password)
             # Update the password in the database
             query = "UPDATE akun SET password = %s WHERE id_akun = %s"
             adik_asuh_manager.db.query(query, (new_password, donatur.get_id()))
-            print("Password berhasil diubah.")
+            berhasil("Password berhasil diubah.")
         else:
-            print("Password baru dan konfirmasi tidak cocok.")
+            error("Password baru dan konfirmasi tidak cocok.")
     
     lanjut()
 
 def ganti_email(donatur):
     pembersih()
-    header = "Ganti Email"
+    header = hd.SubheaderGantiPassword()
     print(header)
-    new_email = input("Masukkan email baru: ").strip()
+    new_email = input(f"{warna.biru+warna.bold}Masukkan email baru > {warna.reset}").strip()
     
     if new_email:
         donatur.set_email(new_email)
         # Update the email in the database
         query = "UPDATE akun SET email = %s WHERE id_akun = %s"
         adik_asuh_manager.db.query(query, (new_email, donatur.get_id()))
-        print("Email berhasil diubah.")
+        berhasil("Email berhasil diubah.")
     else:
-        print("Email baru tidak boleh kosong.")
+        error("Email baru tidak boleh kosong.")
     
     lanjut()
 
@@ -1116,16 +1251,16 @@ def ganti_no_telepon(donatur):
     pembersih()
     header = "Ganti No Telepon"
     print(header)
-    new_no_telepon = input("Masukkan no telepon baru: ").strip()
+    new_no_telepon = input(f"{warna.biru+warna.bold}Masukkan no telepon baru > {warna.reset}").strip()
     
     if new_no_telepon:
         donatur.set_notelp(new_no_telepon)
         # Update the phone number in the database
         query = "UPDATE akun SET notelp = %s WHERE id_akun = %s"
         adik_asuh_manager.db.query(query, (new_no_telepon, donatur.get_id()))
-        print("No telepon berhasil diubah.")
+        berhasil("No telepon berhasil diubah.")
     else:
-        print("No telepon baru tidak boleh kosong.")
+        error("No telepon baru tidak boleh kosong.")
     
     lanjut()
 
@@ -1141,7 +1276,7 @@ def ganti_no_telepon(donatur):
 def menuAdmin(admin):
     
     while admin.cek_login:
-        header = f"Selamat datang Admin {admin.get_nama()}"
+        header = hd.HeaderMenuAdmin(admin)
         menu = ['• Manajemen Program Donasi', '• Manajemen Adik Asuh', '• Cek Rekening', '• Logout']
         pilihan = menu_navigasi(header, menu)
 
@@ -1154,9 +1289,13 @@ def menuAdmin(admin):
         elif pilihan == 3:
             admin.logout()
         else:
-            print("Pilihan tidak valid.")
+            error("Pilihan tidak valid.")
+            lanjut()
 
 def Admin_CekRekening(admin):
+    pembersih()
+    header = hd.headerCek()
+    print(header)
     print(f"Rekening anda : {admin.get_dompet()}")
     lanjut()
 
@@ -1165,7 +1304,7 @@ def Admin_CekRekening(admin):
 def AdminManajemen_ProgramDonasi(admin, program_manager):
     while True:
        
-        header = "Halaman Manajemen Program Yayasan"
+        header = hd.headerManajemenDonasi()
         menu = ['• Lihat Program Yayasan', '• Tambah Program Yayasan', '• Edit Program Yayasan', '• Hapus Program Yayasan', '• Kembali']
         pilihan = menu_navigasi(header,menu)
         
@@ -1186,7 +1325,7 @@ def AdminManajemen_ProgramDonasi(admin, program_manager):
 
 def lihatProgram(program_manager):
     while True:
-        header = "Daftar Program Yayasan"
+        header = hd.SubheaderLihatProgram()
         programs = program_manager.lihat_program()
         options = ["• " + nama for id, nama in programs] + ["• Kembali"]
         pilihan = menu_navigasi(header, options)
@@ -1195,14 +1334,14 @@ def lihatProgram(program_manager):
             program_nama = programs[pilihan][1]  
             program = program_manager.lihat_detail_program(program_id)
             if program:
-                print(f"Progress Donasi: {program.get_donasi_terkumpul()} / {program.get_target_donasi()}")
+                info(f"Progress Donasi: {program.get_donasi_terkumpul()} / {program.get_target_donasi()}")
                 lanjut()
                 while True:
                     pembersih()
                     detail_header = f"Detail Program {program_nama}"  
                     detail_options = ["• Melihat Histori Donasi", "• Kembali"]
 
-                    detail_pilihan = submenu_navigasi(detail_header, detail_options)
+                    detail_pilihan = menu_navigasi(detail_header, detail_options)
                     if detail_pilihan == 0:
                         histori_donasi = program_manager.lihat_histori_donasi(program_id)
                         print("===== Histori Donasi =====")
@@ -1223,12 +1362,15 @@ def lihatProgram(program_manager):
 
 
 def tambahProgram(program_manager):
-    nama = input("Nama Program: ")
-    deskripsi = input("Deskripsi Program: ")
-    target_donasi = float(input("Target Donasi: "))
+    pembersih()
+    header = hd.SubheaderTambahDonasi()
+    print(header)
+    nama = input(f"{warna.biru+warna.bold}Nama Program > {warna.reset}")
+    deskripsi = input(f"{warna.biru+warna.bold}Deskripsi Program > {warna.reset}")
+    target_donasi = float(input(f"{warna.biru+warna.bold}Target Donasi > {warna.reset}"))
     donasi_terkumpul = 0.0  
     while True:
-        tenggat = input("Tenggat Selesai Pengumpulan Dana (YYYY-MM-DD): ")
+        tenggat = input(f"{warna.biru+warna.bold}Tenggat Selesai Pengumpulan Dana (YYYY-MM-DD) > {warna.reset}")
         try:
             if not tenggat:
                 raise ValueError("Tenggat tidak boleh kosong.")
@@ -1237,7 +1379,7 @@ def tambahProgram(program_manager):
                 raise ValueError("Tanggal tidak boleh kurang dari tanggal sekarang.")
             break
         except ValueError as e:
-            print("Error:", e)
+            error(e)
 
     program = Program(nama, deskripsi, target_donasi, donasi_terkumpul, tenggat)
     program_manager.tambah_program(program)
@@ -1246,17 +1388,17 @@ def tambahProgram(program_manager):
 
 
 def editProgram(program_manager):
-    header = "Pilih Program untuk Diedit"
+    header = hd.SubheaderEditProgram()
     programs = program_manager.lihat_program()
     options = ["• " + nama for id, nama in programs] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
     if pilihan < len(programs):
         idx = programs[pilihan][0]
-        nama = input("Nama Program (biarkan kosong jika tidak ingin mengubah): ")
-        deskripsi = input("Deskripsi Program (biarkan kosong jika tidak ingin mengubah): ")
-        target_donasi = input("Target Donasi (biarkan kosong jika tidak ingin mengubah): ")
+        nama = input(f"{warna.biru+warna.bold}Nama Program (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
+        deskripsi = input(f"{warna.biru+warna.bold}Deskripsi Program (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
+        target_donasi = input(f"{warna.biru+warna.bold}Target Donasi (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
         while True:
-            tenggat = input("Tenggat Selesai Pengumpulan Dana (biarkan kosong jika tidak ingin mengubah): ")
+            tenggat = input(f"{warna.biru+warna.bold}Tenggat Selesai Pengumpulan Dana (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
             if tenggat:
                 try:
                     tenggat_date = datetime.datetime.strptime(tenggat, '%Y-%m-%d')
@@ -1264,7 +1406,7 @@ def editProgram(program_manager):
                         raise ValueError("Tanggal tidak boleh kurang dari tanggal sekarang.")
                     break
                 except ValueError as e:
-                    print("Error:", e)
+                    error(e)
             else:
                 break
 
@@ -1278,11 +1420,11 @@ def editProgram(program_manager):
         if tenggat:
             kwargs['tenggat'] = tenggat
         program_manager.edit_program(idx, **kwargs)
-        print("Program berhasil diedit.")
+        berhasil("Program berhasil diedit.")
         lanjut()
 
 def hapusProgram(admin, program_manager):
-    header = "Pilih Program untuk Dihapus"
+    header = hd.SubheaderHapusProgram()
     programs = program_manager.lihat_program()
     options = ["• " + nama for id, nama in programs] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
@@ -1291,7 +1433,8 @@ def hapusProgram(admin, program_manager):
         program = program_manager.lihat_detail_program(idx)
         if program:
             if not program.cek_terpenuhi_program():
-                konfirmasi = input("Target donasi belum terpenuhi. Apakah Anda yakin ingin menghapus program ini? (y/n): ")
+                info("Target donasi belum terpenuhi.")
+                konfirmasi = input(f"{warna.biru+warna.bold}Apakah Anda yakin ingin menghapus program ini? (y/n) > {warna.reset}")
                 if konfirmasi.lower() != 'y':
                     return
             dompetadmin = admin.get_dompet() + program.get_donasi_terkumpul()
@@ -1301,9 +1444,9 @@ def hapusProgram(admin, program_manager):
                 db.query(f"UPDATE akun SET dompet = {dompetadmin} WHERE username = '{admin.get_username()}'")
                 db.query(f"DELETE FROM donasi WHERE id_program = '{idx}'")
                 program_manager.hapus_program(idx)
-                print(f"Program {program.get_nama()} berhasil dihapus dan donasi terkumpul sebesar {program.get_donasi_terkumpul()} telah ditambahkan ke dompet admin.")
+                berhasil(f"Program {program.get_nama() + warna.bold} berhasil dihapus dan donasi terkumpul sebesar {program.get_donasi_terkumpul() + warna.bold} telah ditambahkan ke dompet admin.")
             except Exception as e:
-                print(f"Terjadi kesalahan saat menghapus program: {e}")
+                error(f"Terjadi kesalahan saat menghapus program: {e}")
             lanjut()
 
 
@@ -1312,7 +1455,7 @@ def hapusProgram(admin, program_manager):
 
 def AdminManajemen_AdikAsuh(adik_asuh_manager):
     while True:
-        header = "Halaman Manajemen Adik Asuh"
+        header = hd.headerManajemenAdik()
         menu = ['• Lihat Data Adik Asuh', '• Tambah Data Adik Asuh', '• Edit Data Adik Asuh', '• Hapus Data Adik Asuh', '• Lihat Donatur dan Anak Asuh', '• Kembali']
         pilihan = menu_navigasi(header, menu)
 
@@ -1331,41 +1474,40 @@ def AdminManajemen_AdikAsuh(adik_asuh_manager):
 
 def tambahAnakAsuh(adik_asuh_manager):
     pembersih()
-    print('''
-                                                                    Tambah Data Adik Asuh
-    ''')
+    header = hd.SubheaderTambahAdik()
+    print(header)
     while True:
-        nama = input("Nama Adik Asuh: ").strip()
+        nama = input(f"{warna.biru+warna.bold}Nama Adik Asuh > {warna.reset}").strip()
         if not nama:
-            print("Nama tidak boleh kosong. Silakan masukkan nama yang valid.")
+            error("Nama tidak boleh kosong. Silakan masukkan nama yang valid.")
             continue
 
-        tempat_tinggal = input("Tempat Tinggal Adik Asuh: ").strip()
+        tempat_tinggal = input(f"{warna.biru+warna.bold}Tempat Tinggal Adik Asuh > {warna.reset}").strip()
         if not tempat_tinggal:
-            print("Tempat tinggal tidak boleh kosong. Silakan masukkan tempat tinggal yang valid.")
+            error("Tempat tinggal tidak boleh kosong. Silakan masukkan tempat tinggal yang valid.")
             continue
 
-        umur = input("Umur Adik Asuh: ").strip()
+        umur = input(f"{warna.biru+warna.bold}Umur Adik Asuh > {warna.reset}").strip()
         if not umur:
-            print("Umur tidak boleh kosong. Silakan masukkan umur yang valid.")
+            error("Umur tidak boleh kosong. Silakan masukkan umur yang valid.")
             continue
 
-        kebutuhan = input("Kebutuhan Adik Asuh: ").strip()
+        kebutuhan = input(f"{warna.biru+warna.bold}Kebutuhan Adik Asuh > {warna.reset}").strip()
         if not kebutuhan:
-            print("Kebutuhan tidak boleh kosong. Silakan masukkan kebutuhan yang valid.")
+            error("Kebutuhan tidak boleh kosong. Silakan masukkan kebutuhan yang valid.")
             continue
 
         try:
-            target_donasi = float(input("Target Donasi: ").strip())
+            target_donasi = float(input(f"{warna.biru+warna.bold}Target Donasi > {warna.reset}").strip())
         except ValueError:
-            print("Target donasi harus berupa angka. Silakan masukkan jumlah yang valid.")
+            error("Target donasi harus berupa angka. Silakan masukkan jumlah yang valid.")
             continue
 
         status = 'Belum di Asuh'
         donasi_terkumpul = 0.00  
         anak = AdikAsuh(None, nama, tempat_tinggal, umur, kebutuhan, status, target_donasi, donasi_terkumpul)
         adik_asuh_manager.tambah_anak(anak)
-        print("Data adik asuh telah ditambahkan")
+        berhasil("Data adik asuh telah ditambahkan")
         break
 
     lanjut()
@@ -1375,19 +1517,17 @@ def tambahAnakAsuh(adik_asuh_manager):
 
 def editAnakAsuh(adik_asuh_manager):
     pembersih()
-    header = """
-                                                                    Ubah Data Adik Asuh
-"""
+    header = hd.SubheaderEditAdik()
     anak_list = adik_asuh_manager.lihat_anak()
     options = [f"• {anak[1]}" for anak in anak_list] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
     if pilihan < len(anak_list):
         id = anak_list[pilihan][0]
-        nama = input("Nama Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
-        tempat_tinggal = input("Tempat Tinggal Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
-        umur = input("Umur Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
-        kebutuhan = input("Kebutuhan Adik Asuh (biarkan kosong jika tidak ingin mengubah): ")
-        target_donasi = input("Target Donasi (biarkan kosong jika tidak ingin mengubah): ")
+        nama = input(f"{warna.biru+warna.bold}Nama Adik Asuh (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
+        tempat_tinggal = input(f"{warna.biru+warna.bold}Tempat Tinggal Adik Asuh (biarkan kosong jika tidak ingin mengubah)> {warna.reset}")
+        umur = input(f"{warna.biru+warna.bold}Umur Adik Asuh (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
+        kebutuhan = input(f"{warna.biru+warna.bold}Kebutuhan Adik Asuh (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
+        target_donasi = input(f"{warna.biru+warna.bold}Target Donasi (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
         kwargs = {}
         if nama:
             kwargs['nama'] = nama
@@ -1400,16 +1540,14 @@ def editAnakAsuh(adik_asuh_manager):
         if target_donasi:
             kwargs['target_donasi'] = float(target_donasi)
         adik_asuh_manager.edit_anak(id, **kwargs)
-        print("Data adik asuh telah diedit.")
+        berhasil("Data adik asuh telah diedit.")
         lanjut()
         pembersih()
 
 
 def hapusAnakAsuh(adik_asuh_manager):
     pembersih()
-    header = """
-                                                                    Hapus Data Adik Asuh
-"""
+    header = hd.SubheaderHapusAdik()
     anak_list = adik_asuh_manager.lihat_anak()
     options = [f"• {anak[1]}" for anak in anak_list] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
@@ -1420,20 +1558,18 @@ def hapusAnakAsuh(adik_asuh_manager):
         konfirmasi = menu_navigasi(header, options)
         if konfirmasi == 0:
             adik_asuh_manager.hapus_anak(id)
-            print("Data Adik Asuh dihapus")
+            berhasil("Data Adik Asuh dihapus")
             lanjut()
             pembersih()
         elif konfirmasi == 1:
-            print("Penghapusan dibatalkan")
+            info("Penghapusan dibatalkan")
             lanjut()
             pembersih()
 
 
 def lihatAnakAsuh(adik_asuh_manager):
     while True:
-        header = """
-                                                                    Lihat Data Adik Asuh
-"""
+        header = hd.SubheaderLihatAdikasuh()
         anak_list = adik_asuh_manager.lihat_anak()
         options = [f"• {anak[1]} - {anak[2]}" for anak in anak_list] + ["• Kembali"]
         pilihan = menu_navigasi(header, options)
@@ -1447,9 +1583,8 @@ def lihatAnakAsuh(adik_asuh_manager):
 
 def lihatDonaturDanAnakAsuh(adik_asuh_manager):
     pembersih()
-    print('''
-                                                                    Donatur dan Anak Asuh
-''')
+    header = hd.SubHeaderMenuAdikKakakAsuh()
+    print(header)
     donatur_list = adik_asuh_manager.lihat_donatur_dan_anak_asuh()
     for donatur in donatur_list:
         print(f"Nama Donatur: {donatur[0]}")
