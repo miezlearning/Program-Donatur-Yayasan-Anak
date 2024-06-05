@@ -1388,7 +1388,7 @@ def lihatProgram(program_manager):
 
 def tambahProgram(program_manager):
     pembersih()
-    header = hd.SubheaderTambahDonasi()
+    header = hd.SubheaderTambahProgram()
     print(header)
     nama = input(f"{warna.biru+warna.bold}Nama Program > {warna.reset}")
     deskripsi = input(f"{warna.biru+warna.bold}Deskripsi Program > {warna.reset}")
@@ -1396,15 +1396,12 @@ def tambahProgram(program_manager):
     donasi_terkumpul = 0.0  
     while True:
         tenggat = input(f"{warna.biru+warna.bold}Tenggat Selesai Pengumpulan Dana (YYYY-MM-DD) > {warna.reset}")
-        try:
-            if not tenggat:
-                raise ValueError("Tenggat tidak boleh kosong.")
-            tenggat_date = datetime.datetime.strptime(tenggat, '%Y-%m-%d')
-            if tenggat_date.date() < datetime.datetime.now().date():
-                raise ValueError("Tanggal tidak boleh kurang dari tanggal sekarang.")
-            break
-        except ValueError as e:
-            error(e)
+        if not tenggat:
+            error("Tenggat tidak boleh kosong.")
+        tenggat_date = datetime.datetime.strptime(tenggat, '%Y-%m-%d')
+        if tenggat_date.date() < datetime.datetime.now().date():
+            error("Tanggal tidak boleh kurang dari tanggal sekarang.")
+        break
 
     program = Program(nama, deskripsi, target_donasi, donasi_terkumpul, tenggat)
     program_manager.tambah_program(program)
