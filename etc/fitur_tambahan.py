@@ -79,32 +79,45 @@ class ZakatCalculator:
         self.hutang = 0
 
     def input_asset(self):
-        self.emas = float(input(f"{warna.biru+warna.bold}Masukkan nilai emas yang Anda miliki (gram) > {warna.reset}"))
-        if self.emas is None:
-            raise ValueError("Nilai emas tidak bisa kosong.")
-        elif self.emas < 0:
-            raise ValueError("Nilai emas tidak bisa kurang dari 0.")
-        
+        while True:
+            try:
+                self.emas = float(input(f"{warna.biru+warna.bold}Masukkan nilai emas yang Anda miliki (gram) > {warna.reset}"))
+                if self.emas < 0:
+                    raise ValueError("Nilai emas tidak bisa kurang dari 0.")
+                break  
 
-        self.perak = float(input(f"{warna.biru+warna.bold}Masukkan nilai perak yang Anda miliki (gram) > {warna.reset}"))
-        if self.perak is None:
-            raise ValueError("Nilai perak tidak bisa kosong.")
-        elif self.perak < 0:
-            raise ValueError("Nilai perak tidak bisa kurang dari 0.")
-        
+            except ValueError:
+                print("Masukan harus berupa angka.")
 
-        self.tabungan = float(input(f"{warna.biru+warna.bold}Masukkan jumlah tabungan Anda > {warna.reset}"))
-        if self.tabungan is None:
-            raise ValueError("Jumlah tabungan tidak bisa kosong.")
-        elif self.tabungan < 0:
-            raise ValueError("Jumlah tabungan tidak bisa kurang dari 0.")
-        
+        while True:
+            try:
+                self.perak = float(input(f"{warna.biru+warna.bold}Masukkan nilai perak yang Anda miliki (gram) > {warna.reset}"))
+                if self.perak < 0:
+                    raise ValueError("Nilai perak tidak bisa kurang dari 0.")
+                break  
 
-        self.hutang = float(input(f"{warna.biru+warna.bold}Masukkan jumlah hutang Anda (jika ada, jika tidak, masukkan 0) > {warna.reset}"))
-        if self.emas is None:
-            raise ValueError("Harga emas tidak bisa kosong.")
-        elif self.emas < 0:
-            raise ValueError("Harga emas tidak bisa kurang dari 0.")
+            except ValueError:
+                print("Masukan harus berupa angka.")
+
+        while True:
+            try:
+                self.tabungan = float(input(f"{warna.biru+warna.bold}Masukkan jumlah tabungan Anda > {warna.reset}"))
+                if self.tabungan < 0:
+                    raise ValueError("Jumlah tabungan tidak bisa kurang dari 0.")
+                break  
+
+            except ValueError:
+                print("Masukan harus berupa angka.")
+
+        while True:
+            try:
+                self.hutang = float(input(f"{warna.biru+warna.bold}Masukkan jumlah hutang Anda (jika ada, jika tidak, masukkan 0) > {warna.reset}"))
+                if self.hutang < 0:
+                    raise ValueError("Jumlah hutang tidak bisa kurang dari 0.")
+                break  
+
+            except ValueError:
+                print("Masukan harus berupa angka.")
 
     def hitung_zakat_emas(self):
         nishab_emas = 85  # nishab emas dalam gram
@@ -325,30 +338,31 @@ def menu_navigasi(header, options, info_message=None, style=None):
 
         
 def kalkulatorzakat():
-    pembersih()
-    calculator = ZakatCalculator()
-    try:
-        calculator.input_asset()
+    while True:
+        pembersih()
+        calculator = ZakatCalculator()
+        try:
+            calculator.input_asset()
 
-        print("\n-- Hitung Zakat --")
-        
-        
-        txt = calculator.hitung_zakat_emas()
-        info(txt)
+            print("\n-- Hitung Zakat --")
+            
+            
+            txt = calculator.hitung_zakat_emas()
+            info(txt)
 
-        txt = calculator.hitung_zakat_perak()
-        info(txt)
+            txt = calculator.hitung_zakat_perak()
+            info(txt)
 
-        txt = calculator.hitung_zakat_tabungan()
-        info(txt)
+            txt = calculator.hitung_zakat_tabungan()
+            info(txt)
 
-        print("\n-- Total Zakat --")
-        txt = calculator.hitung_total_zakat()
-        info(txt)
-        lanjut()
-        return
-    except ValueError as e:
-        error(e)
+            print("\n-- Total Zakat --")
+            txt = calculator.hitung_total_zakat()
+            info(txt)
+            lanjut()
+            break
+        except ValueError as e:
+            error(e)
 
 
 

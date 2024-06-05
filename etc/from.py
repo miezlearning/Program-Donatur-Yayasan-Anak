@@ -1,1 +1,0 @@
-print("\033[5;37;40m Negative Colour\033[0;37;40m\n")

@@ -9,7 +9,7 @@ from pwinput import pwinput as enkripsi_password
 # Modul Fitur Tambahan
 from etc.fitur_tambahan import validasi_email, kirim_forgot_account, pembersih, lanjut, org_chart, menu_navigasi, kalkulatorzakat, top_up, info,berhasil, donasi_berhasil, error, info, loading_bar
 # Modul Fitur Class
-from etc.fitur_tambahan import Database, AutoDonasi, warna, ZakatCalculator
+from etc.fitur_tambahan import Database, AutoDonasi, warna
 # Modul Header
 import etc.header as hd
 # Modul GUI
@@ -747,11 +747,11 @@ def menuDonatur(donatur):
 def proses_donasiOtomatis(donatur, program_manager):
     auto_donasi = donatur.get_auto_donasi()
 
-    info_message = f"\nPerlu diperhatikan dompet yang kamu masukkan akan terus berdonasi, bisa dihentikan ketika logout atau hentikan manual.\n"
+    info_message = f"Perlu diperhatikan dompet yang kamu masukkan akan terus berdonasi, bisa dihentikan ketika logout atau hentikan manual.\n"
     header = hd.Subheader_MenuDonasiOtomatis()
     if auto_donasi and auto_donasi.active:
         menu = ['• Hentikan Donasi Otomatis', '• Kembali']
-        info_message1 = f'test'
+        info_message1 = f'Donasi otomatis akan berhenti jika kamu logout.'
         pilihan = menu_navigasi(header, menu, info_message1, info)
         if pilihan == 0:
             auto_donasi.stop()
@@ -776,14 +776,23 @@ def proses_donasiOtomatis(donatur, program_manager):
                 lanjut()
                 return
             else:
-                jumlah = int(input(f"{warna.biru+warna.bold}Masukkan Jumlah Donasi > {warna.reset}").strip())
-                if auto_donasi:
-                    auto_donasi.stop()  
-                auto_donasi = AutoDonasi(donatur, program_manager, program_id, jumlah)
-                auto_donasi.start()
-                donatur.set_auto_donasi(auto_donasi)  
-                print("Donasi otomatis dimulai.")
-                lanjut()
+                while True:
+                    try:
+                        jumlah = int(input(f"{warna.biru+warna.bold}Masukkan Jumlah Donasi > {warna.reset}").strip())
+                        if jumlah <= 0:
+                            error("Jumlah donasi tidak bisa kurang dari 0.")
+                            continue
+                        if auto_donasi:
+                            auto_donasi.stop()  
+                        auto_donasi = AutoDonasi(donatur, program_manager, program_id, jumlah)
+                        auto_donasi.start()
+                        donatur.set_auto_donasi(auto_donasi)  
+                        print("Donasi otomatis dimulai.")
+                        lanjut()
+                        break
+                    except ValueError:
+                        error("Inputan harus berupa angka atau inputan tidak valid.")
+    
 
 
 
@@ -1050,14 +1059,23 @@ def sistemTopUp(donatur):
     pembersih()
     header = hd.SubheaderTopup()
     print(header)
-    topupamount = input(f"{warna.biru+warna.bold}Masukkan jumlah pengisian dompet > {warna.reset}")
-    if topupamount == "":
-        error("Jumlah pengisian tidak boleh kosong.")
+    try:
+        topupamount = input(f"{warna.biru+warna.bold}Masukkan jumlah pengisian dompet > {warna.reset}")
+        if topupamount == "":
+            error("Jumlah pengisian tidak boleh kosong.")
+            lanjut()
+            return
+        elif topupamount < 500:
+            error("Jumlah pengisian minimal adalah Rp. 500.")
+            return
+        topupamount = int(topupamount)
+        top_up(topupamount, donatur)
         lanjut()
         return
-    topupamount = int(topupamount)
-    top_up(topupamount, donatur)
-    lanjut()
+    except ValueError:
+        error("Jumlah pengisian harus berupa angka.")
+        return
+    
 
 
 
@@ -1166,7 +1184,14 @@ def bayarKebutuhanAdikAsuh(donatur, adik_asuh_manager):
     if pilihan < len(options) - 1:
         id = anak_list[pilihan][0]
         adik_asuh_manager.lihat_detail_anak(id)
-        jumlah = int(input(f"{warna.biru+warna.bold}Masukkan jumlah donasi > {warna.reset}"))
+        try:
+            jumlah = int(input(f"{warna.biru+warna.bold}Masukkan jumlah donasi > {warna.reset}"))
+            if jumlah < 1000:
+                raise ValueError
+        except ValueError:
+            error("Jumlah donasi tidak bisa kurang dari Rp 1.000 dan berupa angka.")
+            lanjut()
+            return
         
         if donatur.get_dompet() >= jumlah:
             donatur.kurangi_dompet(jumlah)
@@ -1499,6 +1524,8 @@ def tambahAnakAsuh(adik_asuh_manager):
 
         try:
             target_donasi = float(input(f"{warna.biru+warna.bold}Target Donasi > {warna.reset}").strip())
+            if target_donasi < 5000:
+                error("Target donasi tidak bisa kurang dari Rp. 5.000.")
         except ValueError:
             error("Target donasi harus berupa angka. Silakan masukkan jumlah yang valid.")
             continue
@@ -1522,27 +1549,35 @@ def editAnakAsuh(adik_asuh_manager):
     options = [f"• {anak[1]}" for anak in anak_list] + ["• Kembali"]
     pilihan = menu_navigasi(header, options)
     if pilihan < len(anak_list):
-        id = anak_list[pilihan][0]
-        nama = input(f"{warna.biru+warna.bold}Nama Adik Asuh (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
-        tempat_tinggal = input(f"{warna.biru+warna.bold}Tempat Tinggal Adik Asuh (biarkan kosong jika tidak ingin mengubah)> {warna.reset}")
-        umur = input(f"{warna.biru+warna.bold}Umur Adik Asuh (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
-        kebutuhan = input(f"{warna.biru+warna.bold}Kebutuhan Adik Asuh (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
-        target_donasi = input(f"{warna.biru+warna.bold}Target Donasi (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
-        kwargs = {}
-        if nama:
-            kwargs['nama'] = nama
-        if tempat_tinggal:
-            kwargs['tempat_tinggal'] = tempat_tinggal
-        if umur:
-            kwargs['umur'] = umur
-        if kebutuhan:
-            kwargs['kebutuhan'] = kebutuhan
-        if target_donasi:
-            kwargs['target_donasi'] = float(target_donasi)
-        adik_asuh_manager.edit_anak(id, **kwargs)
-        berhasil("Data adik asuh telah diedit.")
-        lanjut()
-        pembersih()
+        while True:
+            id = anak_list[pilihan][0]
+            nama = input(f"{warna.biru+warna.bold}Nama Adik Asuh (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
+            tempat_tinggal = input(f"{warna.biru+warna.bold}Tempat Tinggal Adik Asuh (biarkan kosong jika tidak ingin mengubah)> {warna.reset}")
+            umur = input(f"{warna.biru+warna.bold}Umur Adik Asuh (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
+            kebutuhan = input(f"{warna.biru+warna.bold}Kebutuhan Adik Asuh (biarkan kosong jika tidak ingin mengubah) > {warna.reset}")
+            try:
+                target_donasi = float(input(f"{warna.biru+warna.bold}Target Donasi (biarkan kosong jika tidak ingin mengubah) > {warna.reset}"))
+                if target_donasi < 5000:
+                    raise ValueError
+            except ValueError:
+                error("Target donasi harus sama dengan atau lebih dari Rp. 5.000")
+                continue
+            kwargs = {}
+            if nama:
+                kwargs['nama'] = nama
+            if tempat_tinggal:
+                kwargs['tempat_tinggal'] = tempat_tinggal
+            if umur:
+                kwargs['umur'] = umur
+            if kebutuhan:
+                kwargs['kebutuhan'] = kebutuhan
+            if target_donasi:
+                kwargs['target_donasi'] = float(target_donasi)
+            adik_asuh_manager.edit_anak(id, **kwargs)
+            berhasil("Data adik asuh telah diedit.")
+            lanjut()
+            pembersih()
+            break
 
 
 def hapusAnakAsuh(adik_asuh_manager):
