@@ -1,20 +1,47 @@
-# Welcome Message
+
+<div style="text-align: center;">
+    <h3>👶 Yayasan Anak Budi Pekerti</h3>
+    <img src="etc/media/logo.jpeg" alt="Logo Budi Pekerti" style="width: 300px; height: auto;">
+</div>
+
+<br>
+
+# 👋 Welcome Message
+
+Halo!, selamat datang di project kecil kami **Yayasan Anak Budi Pekerti**. Project ini kami buat untuk memenuhi ketentuan *UAS* untuk mata kuliah **Pemrograman Berorientasi Objek**.
 
 
 
 
+# 📙 Panduan
 
-# Panduan
-
-> ## Tahapan Instalasi Module 
-> 
-> 1. **`pip3 install mysql-connector-python`** or **`pip install mysql-connector-python`** = Untuk module database
-> 
-> 2. **`pip3 install pwinput`** or **`pip install pwinput`**= Untuk module password char input
-> 
-> 3. **`pip3 install readchar`** or **`pip install readchar`**= Untuk module keymenu atau key menu arrow.
-> 4. 
+> ## 👻 How To Get Started 
+>
+> - Install seluruh modul menggunakan command `pip install -r requirements.txt`
+> - Jalankan program menggunakan command `py3 index.py`
+> - **SELAMAT MENGGUNAKAN! JANGAN LUPA STAR-NYA ⭐.**
 
 
 
+# ⚙️ Fungsional
+
+> ## 🤑 Penjelasan Menu Donatur
+>
+> Menu Donatur, kalian akan melihat beberapa menu menarik yang berhubungan dengan yayasan tersebut seperti; **Tentang Kami, Program Kami, Donasi, Donasi Otomatis, Dompet, Adik Asuh, dan Pengaturan Akun** mari kita bahas lebih lanjut.
+>
+>
+> - ## Tentang Kami
+> lorem ipsum
+> - ## Program Kami
+>  lorem ipsum
+> - ## Donasi 
+>  lorem ipsum
+> - ## Donasi Otomatis
+>  lorem ipsum
+> - ## Dompet
+>  lorem ipsum
+> - ## Adik Asuh
+>  lorem ipsum
+> - ## Pengaturan Akun
+>  lorem ipsum
 
