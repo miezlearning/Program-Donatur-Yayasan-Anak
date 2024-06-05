@@ -15,11 +15,13 @@ Halo!, selamat datang di project kecil kami **Yayasan Anak Budi Pekerti**. Proje
 
 # 📙 Panduan
 
-> ## 👻 How To Get Started 
->
-> - Install seluruh modul menggunakan command `pip install -r requirements.txt`
-> - Jalankan program menggunakan command `py3 index.py`
-> - **SELAMAT MENGGUNAKAN! JANGAN LUPA STAR-NYA ⭐.**
+ ## 👻 How To Get Started 
+
+ - Install seluruh modul menggunakan command `pip install -r requirements.txt`
+ - Jalankan program menggunakan command `py3 index.py`
+ - **SELAMAT MENGGUNAKAN! JANGAN LUPA STAR-NYA ⭐.**
+
+ <br>
 
 > [!TIP]
 > Jika kamu menemukan error seperti dibawah ini :
@@ -30,23 +32,23 @@ Halo!, selamat datang di project kecil kami **Yayasan Anak Budi Pekerti**. Proje
 
 # ⚙️ Fungsional
 
-> ## 🤑 Penjelasan Menu Donatur
->
-> Menu Donatur, kalian akan melihat beberapa menu menarik yang berhubungan dengan yayasan tersebut seperti; **Tentang Kami, Program Kami, Donasi, Donasi Otomatis, Dompet, Adik Asuh, dan Pengaturan Akun** mari kita bahas lebih lanjut.
->
->
-> - ## Tentang Kami
-> lorem ipsum
-> - ## Program Kami
->  lorem ipsum
-> - ## Donasi 
->  lorem ipsum
-> - ## Donasi Otomatis
->  lorem ipsum
-> - ## Dompet
->  lorem ipsum
-> - ## Adik Asuh
->  lorem ipsum
-> - ## Pengaturan Akun
->  lorem ipsum
+ ## 🤑 Penjelasan Menu Donatur
+
+ Menu Donatur, kalian akan melihat beberapa menu menarik yang berhubungan dengan yayasan tersebut seperti; **Tentang Kami, Program Kami, Donasi, Donasi Otomatis, Dompet, Adik Asuh, dan Pengaturan Akun** mari kita bahas lebih lanjut.
+
+
+ - ## Tentang Kami
+ lorem ipsum
+ - ## Program Kami
+  lorem ipsum
+ - ## Donasi 
+  lorem ipsum
+ - ## Donasi Otomatis
+  lorem ipsum
+ - ## Dompet
+  lorem ipsum
+ - ## Adik Asuh
+  lorem ipsum
+ - ## Pengaturan Akun
+  lorem ipsum
 
