@@ -21,6 +21,11 @@ Halo!, selamat datang di project kecil kami **Yayasan Anak Budi Pekerti**. Proje
 > - Jalankan program menggunakan command `py3 index.py`
 > - **SELAMAT MENGGUNAKAN! JANGAN LUPA STAR-NYA ⭐.**
 
+> [!TIP]
+> Jika kamu menemukan error seperti dibawah ini :
+> `Module not found - "No module named"` gunakan perintah `pip install "nama modulnya"`.  
+> <br> Contoh : Module not found - "readchar" 
+> <br> Yang harus kamu lakukan : `pip install readchar` / `pip3 install readchar`
 
 
 # ⚙️ Fungsional
