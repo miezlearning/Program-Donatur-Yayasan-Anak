@@ -1060,8 +1060,8 @@ def sistemTopUp(donatur):
     header = hd.SubheaderTopup()
     print(header)
     try:
-        topupamount = input(f"{warna.biru+warna.bold}Masukkan jumlah pengisian dompet > {warna.reset}")
-        if topupamount == "":
+        topupamount = int(input(f"{warna.biru+warna.bold}Masukkan jumlah pengisian dompet > {warna.reset}"))
+        if not topupamount:
             error("Jumlah pengisian tidak boleh kosong.")
             lanjut()
             return
